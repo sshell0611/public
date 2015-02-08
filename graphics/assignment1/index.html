@@ -34,16 +34,16 @@
 		//define my different colors
 		vec3 daycolor 	= vec3(153./255., 250./255., 250./255.);
 		vec3 nightcolor = vec3(0., 13./255., 26./255.); 
-		vec3 yellow 	= vec3(1., 1., 83./255.);
+		vec3 suncolor   = vec3(1., 1., 83./255.);
 		vec3 moon		= vec3(254./255., 252./255., 215./255.);
 		vec3 greengrass = vec3(74./255., 93./255., 35./255.);
 		vec3 white 	    = vec3(1.0, 1.0, 1.0);
 
-		float x = vPosition.x;
-		float y = vPosition.y;
+		//if there is a click, reverse the coordinate system
+		float x = (uCursor.z == 1.) ? vPosition.x * -1. : vPosition.x;
+		float y = (uCursor.z == 1.) ? vPosition.y * -1. : vPosition.y;
 		float f = 0.05; 	//frequency
 		float t = 0.5 * cos(2. * 3.14 * f * uTime) + 0.5;		//time along wave
-		float rnd = 1.;
 
 		float sunshiftx = x + 0.6;
 		float sunshifty = y - (0.75 * t);
@@ -62,7 +62,7 @@
 		//working in the left half of the scene for the sun
 		if (sunrad < 0.1)
 		{
-			color = yellow;
+			color = suncolor;
 			color = vec3(color.r * t + nightcolor.r * (1.-t),
 						 color.g * t + nightcolor.g * (1.-t), 
 						 color.b * t + nightcolor.b * (1.-t));

@@ -73,7 +73,7 @@
       // USE A SIMPLE APPROXIMATION SUCH AS: ambient = material / 5.;
 		vec3 ambient = material / 5.;
 
-		color = ambient + Lrgb * material * max(0., dot(N, Ldir));
+		color = ambient + cross(Lrgb, material) * max(0., dot(N, Ldir));
 
 		return color;
    }
@@ -82,8 +82,9 @@
       vec2 c = uCursor.xy;
 	  float f = 5.;
 
-      Lrgb = vec3(1., 1., 1.);
-      Ldir = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
+      Lrgb = vec3(0., 0., 1.);
+      //Ldir = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
+      Ldir = normalize(vec3(0., 1., 1.));
 
       // YOU NEED TO COMPUTE V AND W TO CREATE THE RAY FOR THIS PIXEL,
       // USING vPosition.x AND vPosition.y.
@@ -96,7 +97,7 @@
 	  vec4 sphere = vec4(0., 0., -f, 0.5);
 
       // YOU NEED TO SET r,g,b FOR material.
-	  material = vec3(0., 0., 1.);
+	  material = vec3(.5, .5, .5);
 
       vec3 color = vec3(0., 0., 0.);
       float t = raySphere(V, W, sphere);

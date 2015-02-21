@@ -73,7 +73,7 @@
       // USE A SIMPLE APPROXIMATION SUCH AS: ambient = material / 5.;
 		vec3 ambient = mat / 5.;
 
-		color = ambient + cross(Lrgb, mat) * max(0., dot(N, Ldir));
+		color = ambient + Lrgb * mat * max(0., dot(N, Ldir));
 
 		return color;
    }
@@ -100,8 +100,8 @@
 	  spheres[4] = vec4(-0.15*orbit, -.10, -f*1.5+orbit, 0.10);
 	  //materials setup
 	  materials[0] = vec3(1.*orbit, 1., 0.);
-	  materials[1] = vec3(.1, .1, 1.);
-	  materials[2] = vec3(.1, .1, 1.);
+	  materials[1] = vec3(1., .1, .1);
+	  materials[2] = vec3(1., .1, .1);
 	  materials[3] = vec3(.1, .1, 1.);
 	  materials[4] = vec3(.1, .1, 1.);
 

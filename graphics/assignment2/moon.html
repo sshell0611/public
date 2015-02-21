@@ -73,7 +73,8 @@
       // USE A SIMPLE APPROXIMATION SUCH AS: ambient = material / 5.;
 		vec3 ambient = material / 5.;
 
-		color = cross(Lrgb, material) * max(0., dot(N, Ldir));
+		//color = cross(Lrgb, material) * max(0., dot(N, Ldir));
+		color = Lrgb * material * max(0., dot(N, Ldir));
 
 		return color;
    }
@@ -82,7 +83,7 @@
       vec2 c = uCursor.xy;
 	  float f = 2.5;
 
-      Lrgb = vec3(.5, .5, 1.);
+      Lrgb = vec3(1., 1., 0.);
       Ldir = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
 
       // YOU NEED TO COMPUTE V AND W TO CREATE THE RAY FOR THIS PIXEL,

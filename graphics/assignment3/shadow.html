@@ -21,18 +21,22 @@
    uniform vec3  uCursor;
    varying vec3  vPosition;
 
-   vec4 sphere;
-   vec3 material;
+   const int nSphere = 3;
+   vec4 sphere[3];
+   vec3 material[3];
+   vec4 foundSphere;	//global variable in place of indexing
+   vec3 foundMaterial;	//global variable in place of indexing
 
-   vec3 Lrgb;
-   vec3 Ldir;
+   const int nLight = 2;
+   vec3 Lrgb[2];
+   vec3 Ldir[2];
    vec3 Srgb;
+   float eps = 0.01;
 
    // Compute intersection of a ray with a sphere, if any.  Return t.
    // If there is no intersection, return 10000.
    float findSphere(vec3 V, vec3 W, vec4 S) {
 
-      // YOU NEED TO COMPUTE t, BY SETTING UP AND THEN SOLVING A QUADRATIC EQUATION.
 		vec3 K;
 		K = V - S.xyz;
 
@@ -56,37 +60,77 @@
 		return 10000.;
    }
 
+   float findAnySphere(vec3 V, vec3 W) {
+
+		float t  = 10000.;
+		float tt = 10000.;
+
+		for (int i = 0; i < nSphere; i++)
+		{
+			tt = findSphere(V, W, sphere[i]);
+			if (tt < t)
+			{
+				foundSphere = sphere[i];
+				foundMaterial = material[i];
+				t = tt;
+			}
+		}
+		return t;
+   }
+
+   int findShadow(vec3 P, vec3 L) {
+		vec3 W_ = L;
+		vec3 V_ = P + W_ * eps;
+		int shd = 0;
+		float t = findAnySphere(V_, W_);
+		if (t < 10000.)
+		{
+			shd = 1;
+		}
+		return shd;
+	}
+
    // Diffusely shade a sphere.
    //    point is the x,y,z position of the surface point.
    //    sphere is the x,y,z,r definition of the sphere.
    //    material is the r,g,b color of the sphere.
 
    vec3 shadeSphere(vec3 P, vec4 S, vec3 M, vec3 W) {
+
 		float spow = 10.;
 	  	vec3 color = vec3(0.,0.,0.);
-
-		//surface normal	
-	  	vec3 N = (P - S.xyz) / S.w;
-		vec3 R = 2. * N * dot(N, Ldir) - Ldir;
-		vec3 E = -W;
-
 		vec3 Argb = M / 5.;	//ambient	
 		vec3 Drgb = M;		//diffuse
 
-		//color = amb + cross(Lrgb, diff) * max(0., dot(N, Ldir));
-		color = Argb + Lrgb * (Drgb * max(0., dot(N, Ldir)) + Srgb * pow(max(0., dot(E, R)), spow));
+		//surface normal	
+	  	vec3 N = (P - S.xyz) / S.w;
+		vec3 E = -W;
+
+		//loop through all of the light sources
+		color = Argb;
+		for (int i=0; i < nLight; i++)
+		{
+			vec3 R = 2. * N * dot(N, Ldir[i]) - Ldir[i];
+
+			//shadow ray
+			int shadow = findShadow(P, Ldir[i]);
+			if (shadow == 1)
+				color = color + Argb;
+			else
+				color = color + (Lrgb[i] * (Drgb * max(0., dot(N, Ldir[i])) + Srgb * pow(max(0., dot(E, R)), spow)));
+		}
 
 		return color;
    }
 
-   vec3 colorPixel(vec3 V, vec3 W) {
+   vec3 rayTrace(vec3 V, vec3 W) {
 		vec3 color = vec3(0., 0., 0.);
 
-		float t = findSphere(V, W, sphere);
+		float t = findAnySphere(V, W);
 		if (t < 10000.)
 		{
 			vec3 surfPt = V + t * W;
-			color = shadeSphere(surfPt, sphere, material, W);
+			color = shadeSphere(surfPt, foundSphere, foundMaterial, W);
 		}
 
 		return color;
@@ -94,13 +138,15 @@
 
    void main(void) {
       vec2 c = uCursor.xy;
-	  float f = 10.;		//focal distance
+	  float f = 5.;		//focal distance
 
 	  //light color
-      Lrgb = vec3(1., 1., 0.);
+      Lrgb[0] = vec3(1., 1., 0.);
+      Lrgb[1] = vec3(0., 0., 1.);
 	  //light direction
       //Ldir = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
-      Ldir = normalize(vec3(0.75, 1., 1.));
+      Ldir[0] = normalize(vec3(.5, .25, f));
+      Ldir[1] = normalize(vec3(5., 5., -1.));
 	  Srgb = vec3(1., 1., 1.);
 
 	  //compute V and W
@@ -108,13 +154,17 @@
 	  V = vec3(0., 0., f);
 	  W = normalize(vec3(vPosition.x, vPosition.y, -f));
 
-	  //create a sphere
-	  sphere = vec4(0., 0., 0., 0.5);
-	  //material of the sphere
-	  //material = vec3(.5, .5, .5);
-	  material = vec3(1., 0., 0.);
+	  //create spheres
+	  sphere[0] = vec4(0., 0., 0., 0.25);
+	  sphere[1] = vec4(0., 0., 1., 0.10);
+	  sphere[2] = vec4(.3, .2, 1., 0.10);
 
-      vec3 color = colorPixel(V, W);
+	  //create sphere diffuse colors
+	  material[0] = vec3(1., 0., 0.);
+	  material[1] = vec3(0., .25, .75);
+	  material[2] = vec3(.15, 1., 1.);
+
+      vec3 color = rayTrace(V, W);
       
 	  gl_FragColor = vec4(sqrt(color), 1.); // Do Gamma correction.
    }

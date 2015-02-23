@@ -1,0 +1,247 @@
+<script src=lib1.js></script>
+
+<body bgcolor=black>
+<center>
+<td><canvas id='canvas1' width=400 height=400></canvas></td>
+</center>
+</body>
+
+<script id='my_vertex_shader' type='x-shader/x-vertex'>
+   attribute vec3 aPosition;
+   varying   vec3 vPosition;
+   void main() {
+      gl_Position = vec4(aPosition, 1.0);
+      vPosition = aPosition;
+   }
+</script>
+
+<script id='my_fragment_shader' type='x-shader/x-fragment'>
+   precision mediump float;
+   uniform float uTime;
+   uniform vec3  uCursor;
+   varying vec3  vPosition;
+
+   const int nSphere = 5;
+   vec4 sphere[nSphere];
+   vec3 material[nSphere];
+   vec4 foundSphere;	//global variable in place of indexing
+   vec3 foundMaterial;	//global variable in place of indexing
+   vec4 reflectSphere;	//global variable in place of indexing
+   vec3 reflectMaterial;	//global variable in place of indexing
+   vec3 bkgdColor = vec3(0., 0., 0.);
+
+   const int nLight = 1;
+   vec3 Lrgb[nLight];
+   vec3 Ldir[nLight];
+   vec3 Srgb;
+   float eps = 0.01;
+
+   //define functions here
+   vec3 colorPixel(float, vec3, vec3, int);
+   vec3 shadeSphere(vec3, vec4, vec3, vec3, int);
+   float rayTrace(vec3, vec3);
+   float findReflection(vec3, vec3);
+   /////////////////////////////////////////////
+
+
+   // Compute intersection of a ray with a sphere, if any.  Return t.
+   // If there is no intersection, return 10000.
+   float findSphere(vec3 V, vec3 W, vec4 S) {
+
+		vec3 K;
+		K = V - S.xyz;
+
+		float a = 1.;						//from the normal vector W*W;
+		float b = 2. * (dot(W, K));
+		float c = dot(K, K) - pow(S.w, 2.);
+
+		float d = pow(b, 2.) - 4.*a*c;
+
+		if (d < 0.)
+			return 10000.;
+
+		float t1 = ((-b) + sqrt(d)) / (2.*a);
+		float t2 = ((-b) - sqrt(d)) / (2.*a);
+
+		if (t2 >= 0.)
+			return t2;
+	  	if (t1 >= 0.)
+			return t1;
+
+		return 10000.;
+   }
+
+   float findAnySphere(vec3 V, vec3 W) {
+
+		float t  = 10000.;
+		float tt = 10000.;
+
+		for (int i = 0; i < nSphere; i++)
+		{
+			tt = findSphere(V, W, sphere[i]);
+			if (tt < t)
+			{
+				foundSphere = sphere[i];
+				foundMaterial = material[i];
+				t = tt;
+			}
+		}
+		return t;
+   }
+
+   float findReflection(vec3 V, vec3 W) {
+
+		float t  = 10000.;
+		float tt = 10000.;
+
+		for (int i = 0; i < nSphere; i++)
+		{
+			tt = findSphere(V, W, sphere[i]);
+			if (tt < t)
+			{
+				reflectSphere = sphere[i];
+				reflectMaterial = material[i];
+				t = tt;
+			}
+		}
+		return t;
+   }
+
+
+   int findShadow(vec3 P, vec3 L) {
+		vec3 W_ = L;
+		vec3 V_ = P + W_ * eps;
+		int shd = 0;
+		float t = findAnySphere(V_, W_);
+		if (t < 10000.)
+		{
+			shd = 1;
+		}
+		return shd;
+	}
+
+   float rayTrace(vec3 V, vec3 W) {
+		float t = findAnySphere(V, W);
+		return t;
+   }
+
+   vec3 colorPixel(float t, vec3 V, vec3 W, int reflect) {
+		vec3 color = bkgdColor;
+		//we need to know what shape we hit, here we only have spheres
+		if (t < 10000.)
+		{
+			vec3 surfPt = V + t * W;
+			color = shadeSphere(surfPt, foundSphere, foundMaterial, W, reflect);
+		}
+		return color;
+   }
+
+   vec3 reflector(vec3 V, vec3 W)
+   {
+		vec3 color = bkgdColor;
+		float t = findReflection(V, W);
+		if (t < 10000.)
+		{
+			vec3 M = reflectMaterial;
+			vec4 S = reflectSphere;	
+			vec3 P = V + t * W;
+			vec3 Argb = M / 5.;	//ambient	
+			vec3 Drgb = M;		//diffuse
+
+	  		vec3 N = (P - S.xyz) / S.w;
+
+			color = Argb;
+			for (int i=0; i < nLight; i++)
+			{
+				vec3 diffuse  = Drgb * max(0., dot(N, Ldir[i]));
+				//color = color + (Lrgb[i] * (diffuse + specular));
+				color = color + (Lrgb[i] * diffuse);
+			}
+
+		}
+		return color;
+   }
+
+   vec3 shadeSphere(vec3 P, vec4 S, vec3 M, vec3 W, int reflect) {
+
+		float spow = 20.;
+	  	vec3 color = vec3(0.,0.,0.);
+		vec3 Argb = M / 5.;	//ambient	
+		vec3 Drgb = M;		//diffuse
+
+		//surface normal	
+	  	vec3 N = (P - S.xyz) / S.w;
+		vec3 E = -W;
+
+		//reflection
+		vec3 rflColor = vec3(0.,0.,0.);
+		if (reflect == 1) {
+			vec3 W_ = 2. * N * dot(N, -W) + W;
+			vec3 V_ = P + eps * W_;
+			rflColor = reflector(V_, W_);
+		}		
+
+		//loop through all of the light sources
+		color = Argb;
+		for (int i=0; i < nLight; i++)
+		{
+			vec3 R = 2. * N * dot(N, Ldir[i]) - Ldir[i];
+			vec3 diffuse  = Drgb * max(0., dot(N, Ldir[i]));
+			vec3 specular =  Srgb * pow(max(0., dot(E, R)), spow) + rflColor;
+
+			//shadow ray
+			int shadow = findShadow(P, Ldir[i]);
+			if (shadow == 1)
+				color = color + Argb;
+			else
+				color = color + (Lrgb[i] * (diffuse + specular));
+		}
+
+		return color;
+   }
+
+
+   void main(void) {
+		vec2 c = uCursor.xy;
+		float f = 5.;		//focal distance
+
+	  	//light color
+      	Lrgb[0] = vec3(1., 1., 1.);
+      	//Lrgb[1] = vec3(0., 0., 1.);
+		//light direction
+      	//Ldir = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
+      	Ldir[0] = normalize(vec3(-.75, 1.5, 2.));
+      	//Ldir[1] = normalize(vec3(5., 5., -1.));
+		Srgb = vec3(1., 1., 1.);
+
+	  //compute V and W
+      	vec3 V, W;
+		V = vec3(0., 0., f);
+		W = normalize(vec3(vPosition.x, vPosition.y, -f));
+
+		//create spheres
+		sphere[0] = vec4(0., 0., 0., 0.4);
+		sphere[1] = vec4(.3, .1, 1., 0.10);
+		sphere[2] = vec4(-.3, -.1, 1., 0.15);
+		sphere[3] = vec4(0., .75, 0., 0.25);
+		sphere[4] = vec4(0., -.75, 0., 0.25);
+
+		//create sphere diffuse colors
+		material[0] = vec3(1., 0., 0.);
+		material[1] = vec3(0., .25, .75);
+		material[2] = vec3(.15, 1., 1.);
+		material[3] = vec3(.9, .9, .9);
+		material[4] = vec3(.9, .9, .9);
+
+		float t = rayTrace(V, W);
+		vec3 color = colorPixel(t, V, W, 1);
+      
+		gl_FragColor = vec4(sqrt(color), 1.); // Do Gamma correction.
+   }
+</script>
+
+<script>
+start_gl('canvas1', document.getElementById('my_vertex_shader'  ).innerHTML,
+                    document.getElementById('my_fragment_shader').innerHTML);
+</script>
+

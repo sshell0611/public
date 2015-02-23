@@ -103,7 +103,6 @@
 
    vec3 shadeSphere(vec3 P, vec4 S, vec3 M, vec3 W) {
 
-		float spow = 10.;
 	  	vec3 color = vec3(0.,0.,0.);
 		vec3 Argb = M / 5.;	//ambient	
 		vec3 Drgb = M;		//diffuse
@@ -118,6 +117,12 @@
 		for (int i=0; i < nLight; i++)
 		{
 			vec3 R = 2. * N * dot(N, Ldir[i]) - Ldir[i];
+			vec3 diffuse  = Drgb * max(0., dot(N, Ldir[i]));
+			vec3 specular =  vec3(0.,0.,0.);
+			if (S == sphere[0])
+				specular = Srgb * pow(max(0., dot(E, R)), 20.);
+			else
+				specular = Srgb * pow(max(0., dot(H, N)), 60.);
 
 			//shadow ray
 			//int shadow = findShadow(P, Ldir[i]);
@@ -125,7 +130,7 @@
 			if (shadow == 1)
 				color = color + Argb;
 			else
-				color = color + (Lrgb[i] * (Drgb * max(0., dot(N, Ldir[i])) + Srgb * pow(max(0., dot(E, R)), spow)));
+				color = color + (Lrgb[i] * (diffuse + specular));
 		}
 
 		return color;
@@ -150,9 +155,7 @@
 
 	  Srgb = vec3(1., 1., 1.);
 	  //light color
-      Lrgb[0] = vec3(1., 1., 0.);
-	  //light direction
-      //Ldir = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
+      Lrgb[0] = vec3(1., 1., 1.);
       Ldir[0] = normalize(vec3(.5, .5, 1.));
 
 	  //compute V and W

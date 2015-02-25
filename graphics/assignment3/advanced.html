@@ -222,7 +222,7 @@
 		float f = 5.;		//focal distance
 
 	  	//light color
-      	Lrgb[0] = vec3(1., 1., 1.);
+      	Lrgb[0] = vec3(1., 1.-uCursor.z, 1.-uCursor.z);
 		//light direction
       	//Ldir[0] = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
       	Ldir[0] = normalize(vec3(0., 1.5, 1.));
@@ -239,33 +239,23 @@
 		float angleVel = 1.0;
 		float amp = .075;
 		sphere[0] = vec4(-1.+rad, 0., 1., rad);
-		for (int i = 1; i < nSphere; i++)
+		for (int i = 1; i < 20; i++)
 		{
 			float x = sphere[i-1].x+rad*2.;
 			float y = amp * sin(angle);
 
-			if (uCursor.z == 1.)
-			{
-				if ((x < (uCursor.x + rad)) && 
-				   (x > (uCursor.x - rad)) && 
-				   (y < (uCursor.y + rad)) && 
-				   (y > (uCursor.y - rad)))
-				{
-					y += 1.;
-				}
-			}
-
 			sphere[i] = vec4(x, y, 1., rad);
 
 			if (mod(float(i), 3.) == 0.)
-				material[i] = vec3(.2, .9, 0.);
+				material[i] = vec3(.2, .9*sin(uTime/2.), 0.);
 			else if (mod(float(i), 2.) == 0.)
-				material[i] = vec3(.9, .9, .9);
+				material[i] = vec3(.9, .9*cos(uTime/2.), .9*cos(uTime/2.));
 			else	
-				material[i] = vec3(0., 0.2, .9);
+				material[i] = vec3(0., 0.2, .9*sin(uTime));
 
 			angle += angleVel;
 		}
+
 
 		float t = rayTrace(V, W);
 		vec3 color = colorPixel(t, V, W, 1);

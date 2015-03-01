@@ -16,6 +16,7 @@
 </script>
 
 <script id='my_fragment_shader' type='x-shader/x-fragment'>
+
    precision mediump float;
    uniform float uTime;
    uniform vec3  uCursor;
@@ -31,21 +32,9 @@
    const int HIT_FRONTFACE = 1;
    const int HIT_BACKFACE = 2;
 
-   vec3 bkgdColor = vec3(0., 0., 0.);
-   vec3 floorColor = vec3(.9, .9, .9);
-
-   const int nPlane = 1;
-   vec4 plane[nPlane];
-   vec3 planeMaterial[nPlane];
-   vec4 foundPlane;	//global variable in place of indexing
-   vec3 foundPlaneMaterial;	//global variable in place of indexing
-
-   const int nLight = 1;
-   vec3 Lrgb[nLight];
-   vec3 Ldir[nLight];
-   vec3 Srgb;
-   float eps = 0.01;
-
+   /////////////////////////////////////////////////////////
+   // new structure definitions
+   /////////////////////////////////////////////////////////
    struct Cube
    {
 		vec4 faces[NUM_FACES_CUBE];
@@ -62,6 +51,22 @@
 		vec3 V; //origin
 		vec3 W; //direction
    };
+   /////////////////////////////////////////////////////////
+
+
+   vec3 bkgdColor = vec3(0., 0., 0.);
+   vec3 floorColor = vec3(.9, .9, .9);
+
+   const int nCubes = 3;
+   Cube cube[nCubes];
+   Cube maxCube;
+
+   const int nLight = 1;
+   vec3 Lrgb[nLight];
+   vec3 Ldir[nLight];
+   vec3 Srgb;
+   float eps = 0.1;
+
 
 
    /////////////////////////////////////////////////////////
@@ -178,11 +183,36 @@
 
 		return isHit;
    }
+ 
+
+   int findAnyObject(Ray ray, inout float t)   {
+
+		int isHit = 0;
+		float tt = 10000000.;
+		t = 10000000.;
+
+		//cubes
+		for (int i =0; i < nCubes; ++i)
+		{
+			int found = rayTraceCube(ray, cube[i], tt);
+			if (found != MISSED_POLY)
+			{
+				isHit = 1;
+				if (tt < t)
+				{
+					t = tt;
+					maxCube = cube[i];
+				}
+			}
+		}
+		return isHit;
+   }
+   
 
    ////////////////////////////////////////////////////
    //  Reflection
    ////////////////////////////////////////////////////
-   vec3 reflection(vec3 V, vec3 W, vec3 N, vec3 startColor)
+   vec3 reflection(Ray R, vec3 N, vec3 startColor)
    {
 		vec3 color = startColor;
 		/*float t = findReflection(V, W);
@@ -206,6 +236,21 @@
    }
 
 
+   int findShadow(vec3 P, vec3 L) {
+		Ray ray;
+		ray.W = L;
+		ray.V = P + ray.W * eps;
+		int shd = 0;
+		float t = 10000000.;
+		findAnyObject(ray, t);
+		if (t < 10000000.)
+		{
+			shd = 1;
+		}
+		return shd;
+	}
+
+
    vec3 shadeCube(Ray ray, Cube cube, int reflect) {
 
 		vec3 M = cube.hitMaterial;
@@ -220,9 +265,10 @@
 		//reflection
 		vec3 rflColor = vec3(0.,0.,0.);
 		if (reflect == 1) {
-			vec3 W_ = 2. * N * dot(N, -ray.W) + ray.W;
-			vec3 V_ = cube.surfPt + eps * W_;
-			rflColor = reflection(V_, W_, N, bkgdColor);
+			Ray rfRay;
+			rfRay.W = 2. * N * dot(N, -ray.W) + ray.W;
+			rfRay.V = cube.surfPt + eps * rfRay.W;
+			rflColor = reflection(rfRay, N, bkgdColor);
 		}		
 
 		vec3 color = Argb;
@@ -234,14 +280,27 @@
 			vec3 specular =  Srgb * pow(max(0., dot(E, R)), spow) + rflColor;
 
 			//shadow ray
-			//int shadow = findShadow(P, Ldir[i]);
-			//if (shadow == 1)
-			//	color = color + Argb;
-			//else
-			color = color + (Lrgb[i] * (diffuse + specular));
-			//color = color + (Lrgb[i] * (diffuse));
+			int shadow = findShadow(cube.surfPt, Ldir[i]);
+			if (shadow == 1)
+				color = color + Argb;
+			else
+				color = color + (Lrgb[i] * (diffuse + specular));
 		}
 
+
+		return color;
+	}
+
+
+	vec3 rayTrace(Ray ray) {
+
+		vec3 color = bkgdColor;
+		float t =  10000000.;
+		
+		int found = findAnyObject(ray, t);
+
+		if (t < 10000000.)
+			color = shadeCube(ray, maxCube, 1);
 
 		return color;
 	}
@@ -275,32 +334,21 @@
 	  	//light color
       	Lrgb[0] = vec3(1., 1., 1.);
 		//light direction
-      	//Ldir[0] = normalize(vec3(-1., 0., 1.));
-      	Ldir[0] = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
+      	Ldir[0] = normalize(vec3(0., 0., 1.));
+      	//Ldir[0] = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
 		Srgb = vec3(1., 1., 1.);
 
 	  	//compute V and W
 		Ray ray;
 		ray.V = vec3(0., 0., f);
-		//ray.W = normalize(vec3(vPosition.x, vPosition.y, -f));
 		ray.W = normalize(vec3(vPosition.x, vPosition.y, -f));
 
-		Cube cube[3];
 		cube[0] = defineCube(.1, .3, .5, .7);
-		cube[1] = defineCube(.4, -.3, -.5, .2);
-		cube[2] = defineCube(.3, 0., 0., .1);
+		cube[1] = defineCube(.4, -.3, -.5, -.2);
+		cube[2] = defineCube(.3, 0., 0., .3);
 
 		//for each plane in our scene
-		vec3 color = bkgdColor;
-		for (int i =0; i < 3; ++i)
-		{
-			float t = 1000000000.;
-			int found = rayTraceCube(ray, cube[i], t);
-			if (found != MISSED_POLY)
-				color = shadeCube(ray, cube[i], 1);
-
-		}
-
+		vec3 color = rayTrace(ray);
 
 		gl_FragColor = vec4(sqrt(color), 1.); // Do Gamma correction.
    }

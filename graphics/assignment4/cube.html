@@ -1,0 +1,304 @@
+<script src=lib1.js></script>
+
+<body bgcolor=black>
+<center>
+<td><canvas id='canvas1' width=400 height=400></canvas></td>
+</center>
+</body>
+
+<script id='my_vertex_shader' type='x-shader/x-vertex'>
+   attribute vec3 aPosition;
+   varying   vec3 vPosition;
+   void main() {
+      gl_Position = vec4(aPosition, 1.0);
+      vPosition = aPosition;
+   }
+</script>
+
+<script id='my_fragment_shader' type='x-shader/x-fragment'>
+   precision mediump float;
+   uniform float uTime;
+   uniform vec3  uCursor;
+   varying vec3  vPosition;
+
+   const int NUM_FACES_CUBE = 6;
+   const int INTO_HS = 1;
+   const int OUT_OF_HS = 2;
+   const int OUTSIDE_HS = 0;
+   const int INSIDE_HS = -1;
+   const int MISSED_POLY = 0;
+   const int INSIDE_POLY = -1;
+   const int HIT_FRONTFACE = 1;
+   const int HIT_BACKFACE = 2;
+
+   vec3 bkgdColor = vec3(0., 0., 0.);
+   vec3 floorColor = vec3(.9, .9, .9);
+
+   const int nPlane = 1;
+   vec4 plane[nPlane];
+   vec3 planeMaterial[nPlane];
+   vec4 foundPlane;	//global variable in place of indexing
+   vec3 foundPlaneMaterial;	//global variable in place of indexing
+
+   const int nLight = 1;
+   vec3 Lrgb[nLight];
+   vec3 Ldir[nLight];
+   vec3 Srgb;
+   float eps = 0.01;
+
+   struct Cube
+   {
+		vec4 faces[NUM_FACES_CUBE];
+		vec3 faceMaterial[NUM_FACES_CUBE];
+		vec3 surfPt;
+		float tval;
+		int hitFaceNum;
+		vec4 hitFace;
+		vec3 hitMaterial;
+   };
+
+   struct Ray
+   {
+		vec3 V; //origin
+		vec3 W; //direction
+   };
+
+
+   /////////////////////////////////////////////////////////
+   // function to ray trace a plane
+   /////////////////////////////////////////////////////////
+   int rayTracePlane(Ray R, vec4 P, inout float t) {
+
+		//return codes:
+		//returns 0 if ray is completely outside half space
+		//returns -1 if ray is completely inside half space
+		//returns 1 if ray is going into half space
+		//returns 2 if ray is going out of half space
+		//inout value of t with the distance from the plane
+		
+		float numer = 0.;
+		float denom = 0.;
+
+		numer = -1. * ( P.x * R.V.x + P.y * R.V.y + P.z * R.V.z + P.w );
+		denom = (P.x * R.W.x + P.y * R.W.y + P.z * R.W.z);
+
+		if (denom == 0.)
+		{
+			if (numer > 0.)	
+				return OUTSIDE_HS;
+			return INSIDE_HS;
+		}
+		
+		t = (numer / denom);
+
+		if (denom < 0.)
+			return INTO_HS;
+
+		return OUT_OF_HS;
+
+		//if (t > 0.)
+		//	return 0;
+		//return 1;
+   }
+
+   /////////////////////////////////////////////////////////
+   // function to ray trace a cube 
+   /////////////////////////////////////////////////////////
+   int rayTraceCube(Ray R, inout Cube C, inout float t) {
+
+		int isHit = MISSED_POLY;
+		float tEnter = -10000000.;
+		float tExit = 10000000.;
+		float tt = 0.;
+		int enterFace = -1;
+		int exitFace = -1;
+		vec4 enterPlane;
+		vec4 exitPlane;
+		vec3 enterMaterial;
+		vec3 exitMaterial;
+	
+		for (int i = 0; i < NUM_FACES_CUBE; i++)	
+		{
+			int hitCode = rayTracePlane(R, C.faces[i], tt);
+			//completely missed the cube
+			if (hitCode == OUTSIDE_HS)
+				return MISSED_POLY;
+			//ignore this half plane
+			else if (hitCode == INSIDE_HS)
+				continue;
+			else
+			{
+				//we are entering the plane
+				if (hitCode == INTO_HS)
+				{
+					if (tt > tExit)
+						return MISSED_POLY;
+					if (tt > tEnter)
+					{
+						tEnter = tt;
+						enterFace = i;
+						enterPlane = C.faces[i];
+						enterMaterial = C.faceMaterial[i];
+					}
+				}
+				//we are exiting the plane
+				else
+				{
+					if (tt < tEnter)
+						return MISSED_POLY;
+					if (tt < tExit)
+					{
+						tExit = tt;
+						exitFace = i;
+						exitPlane = C.faces[i];
+						exitMaterial = C.faceMaterial[i];
+					}
+				}
+			}
+		}
+
+		if (tEnter >= 0.)
+		{
+			t = tEnter;
+			isHit = HIT_FRONTFACE;
+			C.hitFaceNum = enterFace;
+			C.hitFace = enterPlane;
+			C.hitMaterial = enterMaterial;
+			C.surfPt = R.V + t * R.W;
+		}
+		else
+		{
+			t = tExit;
+			isHit = HIT_BACKFACE;
+			C.hitFaceNum = exitFace;
+			C.hitFace = exitPlane;
+			C.hitMaterial = exitMaterial;
+			C.surfPt = R.V + t * R.W;
+		}
+
+		return isHit;
+   }
+
+   ////////////////////////////////////////////////////
+   //  Reflection
+   ////////////////////////////////////////////////////
+   vec3 reflection(vec3 V, vec3 W, vec3 N, vec3 startColor)
+   {
+		vec3 color = startColor;
+		/*float t = findReflection(V, W);
+		if (t < 10000.)
+		{
+			vec3 M = reflectMaterial;
+			vec4 S = reflectSphere;	
+			vec3 P = V + t * W;
+			vec3 Argb = M / 5.;	//ambient	
+			vec3 Drgb = M;		//diffuse
+
+			color = Argb;
+			for (int i=0; i < nLight; i++)
+			{
+				vec3 diffuse  = Drgb * max(0., dot(N, Ldir[i]));
+				color = color + (Lrgb[i] * diffuse);
+			}
+
+		}*/
+		return color;
+   }
+
+
+   vec3 shadeCube(Ray ray, Cube cube, int reflect) {
+
+		vec3 M = cube.hitMaterial;
+
+		float spow = 20.;
+		vec3 N = cube.surfPt;
+		vec3 E = -ray.W;
+
+		vec3 Argb = M / 5.;	//ambient	
+		vec3 Drgb = M;		//diffuse
+
+		//reflection
+		vec3 rflColor = vec3(0.,0.,0.);
+		if (reflect == 1) {
+			vec3 W_ = 2. * N * dot(N, -ray.W) + ray.W;
+			vec3 V_ = cube.surfPt + eps * W_;
+			rflColor = reflection(V_, W_, N, bkgdColor);
+		}		
+
+		vec3 color = Argb;
+
+		for (int i=0; i < nLight; i++)
+		{
+			vec3 R = 2. * N * dot(N, Ldir[i]) - Ldir[i];
+			vec3 diffuse  = Drgb * max(0., dot(N, Ldir[i]));
+			vec3 specular =  Srgb * pow(max(0., dot(E, R)), spow) + rflColor;
+
+			//shadow ray
+			//int shadow = findShadow(P, Ldir[i]);
+			//if (shadow == 1)
+			//	color = color + Argb;
+			//else
+			color = color + (Lrgb[i] * (diffuse + specular));
+			//color = color + (Lrgb[i] * (diffuse));
+		}
+
+
+		return color;
+	}
+
+
+	//helper function to define a cube
+	Cube defineCube() {
+
+		Cube c;
+		c.faces[0] = vec4(1., 0., 0., -.2);
+		c.faces[1] = vec4(-1., 0., 0., -.2);
+		c.faces[2] = vec4(0., 1., 0., -.2);
+		c.faces[3] = vec4(0., -1., 0., -.2);
+		c.faces[4] = vec4(0., 0., 1., -.2);
+		c.faces[5] = vec4(0., 0., -1., -.2);
+		//plane
+		c.faceMaterial[0] = vec3(.2, 1., .2);
+		c.faceMaterial[1] = vec3(1., .2, .2);
+		c.faceMaterial[2] = vec3(.2, 1., .2);
+		c.faceMaterial[3] = vec3(1., .2, .2);
+		c.faceMaterial[4] = vec3(.2, 1., .2);
+		c.faceMaterial[5] = vec3(1., .2, .2);
+		return c;
+	}
+
+
+    void main(void) {
+		vec2 c = uCursor.xy;
+		float f = 5.;		//focal distance
+
+	  	//light color
+      	Lrgb[0] = vec3(1., 1., 1.);
+		//light direction
+      	Ldir[0] = normalize(vec3(-1., 0., 1.));
+		Srgb = vec3(1., 1., 1.);
+
+	  	//compute V and W
+		Ray ray;
+		ray.V = vec3(0., 0., f);
+		ray.W = normalize(vec3(vPosition.x, vPosition.y, -f));
+
+		Cube cube;
+		cube = defineCube();
+
+		//for each plane in our scene
+		vec3 color = bkgdColor;
+		float t = 1000000000.;
+		int found = rayTraceCube(ray, cube, t);
+		if (found != MISSED_POLY)
+			color = shadeCube(ray, cube, 1);
+
+		gl_FragColor = vec4(sqrt(color), 1.); // Do Gamma correction.
+   }
+</script>
+
+<script>
+start_gl('canvas1', document.getElementById('my_vertex_shader'  ).innerHTML,
+                    document.getElementById('my_fragment_shader').innerHTML);
+</script>
+

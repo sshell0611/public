@@ -21,6 +21,27 @@
    uniform vec3  uCursor;
    varying vec3  vPosition;
 
+   struct Cylinder
+   {
+ 		vec4 sphere;
+		vec4 cap1;
+		vec4 cap2;
+
+		vec3 sphereMaterial;
+		vec3 cap1Material;
+		vec3 cap2Material;
+
+		vec4 hitFace;
+		vec3 hitMaterial;
+		vec3 surfPt;
+   };
+    
+   struct Ray
+   {
+		vec3 V; //origin
+		vec3 W; //direction
+   };
+
    const int NUM_FACES_CUBE = 6;
    const int INTO_HS = 1;
    const int OUT_OF_HS = 2;
@@ -31,6 +52,9 @@
    const int INSIDE_POLY = -1;
    const int HIT_FRONTFACE = 1;
    const int HIT_BACKFACE = 2;
+
+   const int nCyl = 2;
+   Cylinder cylinder[nCyl];
 
    const int nSphere = 1;
    vec4 sphere[nSphere];
@@ -56,26 +80,6 @@
    float findReflection(vec3, vec3);
    /////////////////////////////////////////////
 
-   struct Cylinder
-   {
- 		vec4 sphere;
-		vec4 cap1;
-		vec4 cap2;
-
-		vec3 sphereMaterial;
-		vec3 cap1Material;
-		vec3 cap2Material;
-
-		vec4 hitFace;
-		vec3 hitMaterial;
-		vec3 surfPt;
-   };
-    
-   struct Ray
-   {
-		vec3 V; //origin
-		vec3 W; //direction
-   };
 
    /////////////////////////////////////////////////////////
    // function to ray trace a plane
@@ -124,7 +128,11 @@
 		vec3 K;
 		K = ray.V - cyl.sphere.xyz;
 
-		float a = pow(ray.W.x,2.) + pow(ray.W.z,2.);						//from the normal vector W*W;
+		float xmul = (cyl.cap1.x == 0.) ? 1. : 0.;
+		float ymul = (cyl.cap1.y == 0.) ? 1. : 0.;
+		float zmul = (cyl.cap1.z == 0.) ? 1. : 0.;
+
+		float a = pow(ray.W.x,2.) * xmul + pow(ray.W.y,2.) * ymul + pow(ray.W.z,2.) * zmul;		
 		float b = 2. * (dot(ray.W, K));
 		float c = dot(K, K) - pow(cyl.sphere.w, 2.);
 
@@ -168,6 +176,8 @@
 				{
 					tExit = tt;
 					hitCode = HIT_BACKFACE;
+					cyl.hitMaterial = cyl.cap1Material;
+					cyl.hitFace = cyl.cap1;
 					//material and stuff
 				}
 				if (tt < tEnter)
@@ -200,6 +210,8 @@
 				{
 					tExit = tt;
 					hitCode = HIT_BACKFACE;
+					cyl.hitMaterial = cyl.cap2Material;
+					cyl.hitFace = cyl.cap2;
 
 					//material and stuff
 				}
@@ -434,11 +446,11 @@
    }
 
 
-   Cylinder createCylinder(float cx, float cy, float cz) {
+   Cylinder createCylinderY() {
 
 		Cylinder cyl;
 
-		cyl.sphere = vec4(0., 0., 0., .15);
+		cyl.sphere = vec4(.75, 0., 0., .10);
 		cyl.cap1 = vec4(0., 1., 0., -.5);
 		cyl.cap2 = vec4(0., -1., 0., -.5);
 
@@ -448,6 +460,21 @@
 
 		return cyl;
 	}
+   Cylinder createCylinderX() {
+
+		Cylinder cyl;
+
+		cyl.sphere = vec4(0., 0., -1., .15);
+		cyl.cap1 = vec4(1., 0., 0., -.65);
+		cyl.cap2 = vec4(-1., 0., 0., -.5);
+
+		cyl.sphereMaterial = vec3(.2, .2, 1.);
+		cyl.cap1Material = vec3(0., 1., .2);
+		cyl.cap2Material = vec3(0., 1., .2);
+
+		return cyl;
+	}
+
 
    void main(void) {
 		vec2 c = uCursor.xy;
@@ -457,8 +484,8 @@
       	//Lrgb[0] = vec3(1., 1.-uCursor.z, 1.-uCursor.z);
       	Lrgb[0] = vec3(1., 1., 1.);
 		//light direction
-      	Ldir[0] = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
-      	//Ldir[0] = normalize(vec3(1., 1., 1.));
+      	//Ldir[0] = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
+      	Ldir[0] = normalize(vec3(1., 0., 1.));
 		Srgb = vec3(1., 1., 1.);
 
 	  	//compute V and W
@@ -467,12 +494,24 @@
 		ray.W = normalize(vec3(vPosition.x, vPosition.y, -f));
 
 		vec3 color = bkgdColor;
+		cylinder[0] = createCylinderY();
+		cylinder[1] = createCylinderX();
+
 		float t = 100000000.;
-		Cylinder cyl = createCylinder(0., 0., 0.);
-		int hitCode = rayTraceCylinder(ray, cyl, t);
-		if (hitCode != MISSED_OBJECT)
-			color = shadeCylinder(ray, cyl, 1);
-      
+		float tt = 100000000.;
+		for (int i = 0; i < nCyl; ++i)
+		{
+			int hitCode = rayTraceCylinder(ray, cylinder[i], tt);
+			if (hitCode != MISSED_OBJECT)
+			{
+				if (tt < t)
+				{
+					t = tt;
+					color = shadeCylinder(ray, cylinder[i], 1);
+				}
+			}
+		}
+
 		gl_FragColor = vec4(sqrt(color), 1.); // Do Gamma correction.
    }
 </script>

@@ -1,0 +1,315 @@
+<script src=lib1.js></script>
+
+<body bgcolor=black>
+<center>
+<td><canvas id='canvas1' width=400 height=400></canvas></td>
+</center>
+</body>
+
+<script id='my_vertex_shader' type='x-shader/x-vertex'>
+   attribute vec3 aPosition;
+   varying   vec3 vPosition;
+   void main() {
+      gl_Position = vec4(aPosition, 1.0);
+      vPosition = aPosition;
+   }
+</script>
+
+<script id='my_fragment_shader' type='x-shader/x-fragment'>
+   precision mediump float;
+   uniform float uTime;
+   uniform vec3  uCursor;
+   varying vec3  vPosition;
+
+   const int nSphere = 3;
+   vec4 sphere[nSphere];
+   vec3 material[nSphere];
+   vec4 foundSphere;	//global variable in place of indexing
+   vec3 foundMaterial;	//global variable in place of indexing
+   vec4 reflectSphere;	//global variable in place of indexing
+   vec3 reflectMaterial;	//global variable in place of indexing
+   vec3 bkgdColor = vec3(0., 0., 0.);
+
+   const int nLight = 1;
+   vec3 Lrgb[nLight];
+   vec3 Ldir[nLight];
+   vec3 Srgb;
+   float eps = 0.01;
+
+   //define functions here
+   vec3 colorPixel(float, vec3, vec3, int);
+   vec3 shadeSphere(vec3, vec4, vec3, vec3, int);
+   float rayTrace(vec3, vec3);
+   float findReflection(vec3, vec3);
+   /////////////////////////////////////////////
+
+   vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+   vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+   vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+   vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+   vec3 fade(vec3 t) { return t*t*t*(t*(t*6.0-15.0)+10.0); } 
+
+   float noise(vec3 P) {
+		vec3 i0 = mod289(floor(P)), i1 = mod289(i0 + vec3(1.0));
+		vec3 f0 = fract(P), f1 = f0 - vec3(1.0), f = fade(f0);
+		vec4 ix = vec4(i0.x, i1.x, i0.x, i1.x), iy = vec4(i0.yy, i1.yy);
+		vec4 iz0 = i0.zzzz, iz1 = i1.zzzz;
+		vec4 ixy = permute(permute(ix) + iy), ixy0 = permute(ixy + iz0), ixy1 = permute(ixy + iz1);
+		vec4 gx0 = ixy0 * (1.0 / 7.0), gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;
+		vec4 gx1 = ixy1 * (1.0 / 7.0), gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;
+		gx0 = fract(gx0); gx1 = fract(gx1);
+		vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0), sz0 = step(gz0, vec4(0.0));
+		vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1), sz1 = step(gz1, vec4(0.0));
+		gx0 -= sz0 * (step(0.0, gx0) - 0.5); gy0 -= sz0 * (step(0.0, gy0) - 0.5);
+		gx1 -= sz1 * (step(0.0, gx1) - 0.5); gy1 -= sz1 * (step(0.0, gy1) - 0.5);
+		vec3 g0 = vec3(gx0.x,gy0.x,gz0.x), g1 = vec3(gx0.y,gy0.y,gz0.y),
+			 g2 = vec3(gx0.z,gy0.z,gz0.z), g3 = vec3(gx0.w,gy0.w,gz0.w),
+			 g4 = vec3(gx1.x,gy1.x,gz1.x), g5 = vec3(gx1.y,gy1.y,gz1.y),
+			 g6 = vec3(gx1.z,gy1.z,gz1.z), g7 = vec3(gx1.w,gy1.w,gz1.w);
+		vec4 norm0 = taylorInvSqrt(vec4(dot(g0,g0), dot(g2,g2), dot(g1,g1), dot(g3,g3)));
+		vec4 norm1 = taylorInvSqrt(vec4(dot(g4,g4), dot(g6,g6), dot(g5,g5), dot(g7,g7)));
+		g0 *= norm0.x; g2 *= norm0.y; g1 *= norm0.z; g3 *= norm0.w;
+		g4 *= norm1.x; g6 *= norm1.y; g5 *= norm1.z; g7 *= norm1.w;
+		vec4 nz = mix(vec4(dot(g0, vec3(f0.x, f0.y, f0.z)), dot(g1, vec3(f1.x, f0.y, f0.z)),
+							  dot(g2, vec3(f0.x, f1.y, f0.z)), dot(g3, vec3(f1.x, f1.y, f0.z))),
+						 vec4(dot(g4, vec3(f0.x, f0.y, f1.z)), dot(g5, vec3(f1.x, f0.y, f1.z)),
+							  dot(g6, vec3(f0.x, f1.y, f1.z)), dot(g7, vec3(f1.x, f1.y, f1.z))), f.z);
+		return 2.2 * mix(mix(nz.x,nz.z,f.y), mix(nz.y,nz.w,f.y), f.x);
+   }
+
+   float fractal(vec3 P) {
+		int cnt = 8;
+		float f = 0.0;
+		for (int i =0; i < 4; ++i)
+		{
+			float x = pow(2., float(i));
+			f = f + (noise(x * P)/ x); 
+		}
+		return f;
+   }
+
+   float turbulence(vec3 P) {
+
+		int cnt = 8;
+		float f = 0.0;
+		for (int i =0; i < 4; ++i)
+		{
+			float x = pow(2., float(i));
+			f = f + (abs(noise(x * P))/ x);
+		}
+		return f;
+   }
+
+   // Compute intersection of a ray with a sphere, if any.  Return t.
+   // If there is no intersection, return 10000.
+   float findSphere(vec3 V, vec3 W, vec4 S) {
+
+		vec3 K;
+		K = V - S.xyz;
+
+		float a = 1.;						//from the normal vector W*W;
+		float b = 2. * (dot(W, K));
+		float c = dot(K, K) - pow(S.w, 2.);
+
+		float d = pow(b, 2.) - 4.*a*c;
+
+		if (d < 0.)
+			return 10000.;
+
+		float t1 = ((-b) + sqrt(d)) / (2.*a);
+		float t2 = ((-b) - sqrt(d)) / (2.*a);
+
+		if (t2 >= 0.)
+			return t2;
+	  	if (t1 >= 0.)
+			return t1;
+
+		return 10000.;
+   }
+
+   float findAnySphere(vec3 V, vec3 W) {
+
+		float t  = 10000.;
+		float tt = 10000.;
+
+		for (int i = 0; i < nSphere; i++)
+		{
+			tt = findSphere(V, W, sphere[i]);
+			if (tt < t)
+			{
+				foundSphere = sphere[i];
+				foundMaterial = material[i];
+				t = tt;
+			}
+		}
+		return t;
+   }
+
+   float findReflection(vec3 V, vec3 W) {
+
+		float t  = 10000.;
+		float tt = 10000.;
+
+		for (int i = 0; i < nSphere; i++)
+		{
+			tt = findSphere(V, W, sphere[i]);
+			if (tt < t)
+			{
+				reflectSphere = sphere[i];
+				reflectMaterial = material[i];
+				t = tt;
+			}
+		}
+		return t;
+   }
+
+
+   int findShadow(vec3 P, vec3 L) {
+		vec3 W_ = L;
+		vec3 V_ = P + W_ * eps;
+		int shd = 0;
+		float t = findAnySphere(V_, W_);
+		if (t < 10000.)
+		{
+			shd = 1;
+		}
+		return shd;
+	}
+
+   float rayTrace(vec3 V, vec3 W) {
+		float t = findAnySphere(V, W);
+		return t;
+   }
+
+   vec3 colorPixel(float t, vec3 V, vec3 W, int reflect) {
+
+		//vec3 color = bkgdColor;
+
+   	  	vec3 backcolor1 = vec3(0., 0., 0.);
+	  	vec3 backcolor2 = vec3(0., 0., 1.);
+	    float s = 0.5 * turbulence(vec3(vPosition.x, vPosition.y, vPosition.z) * uTime);
+	    vec3 color = mix(backcolor1, backcolor2, s);
+
+		//we need to know what shape we hit, here we only have spheres
+		if (t < 10000.)
+		{
+			vec3 surfPt = V + t * W;
+			color = shadeSphere(surfPt, foundSphere, foundMaterial, W, reflect);
+		}
+		return color;
+   }
+
+   vec3 reflector(vec3 V, vec3 W)
+   {
+		vec3 color = bkgdColor;
+		float t = findReflection(V, W);
+		if (t < 10000.)
+		{
+			vec3 M = reflectMaterial;
+			vec4 S = reflectSphere;	
+			vec3 P = V + t * W;
+			vec3 Argb = M / 5.;	//ambient	
+			vec3 Drgb = M;		//diffuse
+
+	  		vec3 N = (P - S.xyz) / S.w;
+
+			color = Argb;
+			for (int i=0; i < nLight; i++)
+			{
+				vec3 diffuse  = Drgb * max(0., dot(N, Ldir[i]));
+				//color = color + (Lrgb[i] * (diffuse + specular));
+				color = color + (Lrgb[i] * diffuse);
+			}
+
+		}
+		return color;
+   }
+
+   vec3 shadeSphere(vec3 P, vec4 S, vec3 M, vec3 W, int reflect) {
+
+		float spow = 20.;
+	  	vec3 color = vec3(0.,0.,0.);
+		vec3 Argb = M / 5.;	//ambient	
+		vec3 Drgb = M;		//diffuse
+
+		//surface normal	
+	  	vec3 N = (P - S.xyz) / S.w;
+		vec3 E = -W;
+
+		//reflection
+		vec3 rflColor = vec3(0.,0.,0.);
+		if (reflect == 1) {
+			vec3 W_ = 2. * N * dot(N, -W) + W;
+			vec3 V_ = P + eps * W_;
+			rflColor = reflector(V_, W_);
+		}		
+
+		//loop through all of the light sources
+		color = Argb;
+		for (int i=0; i < nLight; i++)
+		{
+			vec3 R = 2. * N * dot(N, Ldir[i]) - Ldir[i];
+			vec3 diffuse  = Drgb * max(0., dot(N, Ldir[i]));
+			vec3 specular =  Srgb * pow(max(0., dot(E, R)), spow) + rflColor;
+
+			//shadow ray
+			int shadow = findShadow(P, Ldir[i]);
+			if (shadow == 1)
+				color = color + Argb;
+			else
+				color = color + (Lrgb[i] * (diffuse + specular));
+		}
+
+		return color;
+   }
+
+
+   void main(void) {
+		vec2 c = uCursor.xy;
+		float f = 5.;		//focal distance
+
+	  	//light color
+      	Lrgb[0] = vec3(1., 1., 1.);
+      	//Lrgb[1] = vec3(0., 0., 1.);
+		//light direction
+      	//Ldir = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
+      	Ldir[0] = normalize(vec3(-.75, 1.5, 2.));
+      	//Ldir[1] = normalize(vec3(5., 5., -1.));
+
+	    //compute V and W
+      	vec3 V, W;
+		V = vec3(0., 0., f);
+		W = normalize(vec3(vPosition.x, vPosition.y, -f));
+
+	    //float s = 1.1 * noise(vec3(vPosition.x, vPosition.y, 10.));
+
+		//create spheres
+		sphere[0] = vec4(0., 0., 0., 0.3);
+		sphere[1] = vec4(.3, .1, 1., 0.10);
+		sphere[2] = vec4(-.3, -.1, 1., 0.15);
+
+		//create sphere diffuse colors
+		material[0] = vec3(1., 0., 0.);
+		material[1] = vec3(0., .25, .75);
+
+		//material 3
+	    float r = 0.4 * (turbulence(vec3(vPosition.x * 2.0, vPosition.y * 1.5, 10.)) + 1.8);
+	    float s = pow(0.5 + 0.5 * cos(7. * vPosition.x + 6. * r), 0.3);
+		vec3 m2c1 = vec3(.5, 0., .5);
+		vec3 m2c2 = vec3(.5, 1., 0.);
+		material[2] = mix(m2c1, m2c2, s*cos(0.3 * uTime + 1.2));
+
+		Srgb = vec3(1., 1., 1.);
+
+		float t = rayTrace(V, W);
+		vec3 color = colorPixel(t, V, W, 1);
+      
+		gl_FragColor = vec4(sqrt(color), 1.); // Do Gamma correction.
+   }
+</script>
+
+<script>
+start_gl('canvas1', document.getElementById('my_vertex_shader'  ).innerHTML,
+                    document.getElementById('my_fragment_shader').innerHTML);
+</script>
+

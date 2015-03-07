@@ -22,7 +22,6 @@ to change the color of the square.-->
 </tr>
 
 <script src=drawlib1.js></script>
-<script src=matrix.js></script>
 <script>
 
    var canvas = initCanvas('canvas1');
@@ -34,23 +33,28 @@ to change the color of the square.-->
 		var s = new Vector3(1,0,0);
 		var d = new Vector3(0,0,0); 
 		M.transform(s, d);
-		console.log(d.x);
-		console.log(d.y);
-		console.log(d.z);
+
+		//this is our original cache of the square
+		var square = new Square(-0.5, -0.5, 1);
+
+		//console.log(s);
 
       canvas.update = function(g) {
 
+			drawSquare(square, g, this.width, this.height);
 
-	        g.fillStyle = this.cursor.z ? 'red' : 'rgb(255,255,128)';
-	        g.beginPath();
-	        var x = this.cursor.x, y = this.cursor.y;
-	        g.moveTo(x-50,y-50);
-	        g.lineTo(x+50,y-50);
-	        g.lineTo(x+50,y+50);
-	        g.lineTo(x-50,y+50);
-	        g.fill();
-	  
-	        g.strokeStyle = 'blue';
+
+	        //g.fillStyle = this.cursor.z ? 'red' : 'rgb(255,255,128)';
+	        //g.beginPath();
+	        //var x = this.cursor.x, y = this.cursor.y;
+	        //g.moveTo(x-50,y-50);
+	        //g.lineTo(x+50,y-50);
+	        //g.lineTo(x+50,y+50);
+	        //g.lineTo(x-50,y+50);
+	        //g.fill();
+
+			//draw border last so is on top
+	        g.strokeStyle = 'black';
 	        g.beginPath();
 	        g.moveTo(0,0);
 	        g.lineTo(this.width,0);
@@ -58,6 +62,7 @@ to change the color of the square.-->
 	        g.lineTo(0,this.height);
 	        g.lineTo(0,0);
 	        g.stroke();
+	  
 	     }
 
    /*var canvas = initCanvas('canvas2');

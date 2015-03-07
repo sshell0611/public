@@ -1,0 +1,86 @@
+
+<h2>Assignment 5</h2>
+<p><hr>&nbsp;<p>
+
+<table>
+<tr>
+<td><canvas id=canvas1 width=300 height=200></td>
+<td width=50></td>
+<td valign=top>
+Description here...
+<p>
+For example,...
+<!--in this case I am showing how to use
+<b><big><code>cursor.x</code></big></b>
+and
+<b><big><code>cursor.y</code></big></b>
+to position a square, while using
+<b><big><code>cursor.z</code></big></b>
+(the indicator of whether the mouse button is pressed)
+to change the color of the square.-->
+</td>
+</tr>
+
+<script src=drawlib1.js></script>
+<script src=matrix.js></script>
+<script>
+
+   var canvas = initCanvas('canvas1');
+		var M = new Matrix(4,4);
+		M.identity();
+		//M.scale(0.55, 0.55, 0.55);
+		M.rotateZ(0.6);
+		//M.display();
+		var s = new Vector3(1,0,0);
+		var d = new Vector3(0,0,0); 
+		M.transform(s, d);
+		console.log(d.x);
+		console.log(d.y);
+		console.log(d.z);
+
+      canvas.update = function(g) {
+
+
+	        g.fillStyle = this.cursor.z ? 'red' : 'rgb(255,255,128)';
+	        g.beginPath();
+	        var x = this.cursor.x, y = this.cursor.y;
+	        g.moveTo(x-50,y-50);
+	        g.lineTo(x+50,y-50);
+	        g.lineTo(x+50,y+50);
+	        g.lineTo(x-50,y+50);
+	        g.fill();
+	  
+	        g.strokeStyle = 'blue';
+	        g.beginPath();
+	        g.moveTo(0,0);
+	        g.lineTo(this.width,0);
+	        g.lineTo(this.width,this.height);
+	        g.lineTo(0,this.height);
+	        g.lineTo(0,0);
+	        g.stroke();
+	     }
+
+   /*var canvas = initCanvas('canvas2');
+      canvas.update = function(g) {
+	        g.strokeStyle = 'blue';
+	        g.beginPath();
+	        g.moveTo(0,0);
+	        g.lineTo(this.width,0);
+	        g.lineTo(this.width,this.height);
+	        g.lineTo(0,this.height);
+	        g.lineTo(0,0);
+	        g.stroke();
+	  
+	        g.strokeStyle = 'red';
+	        g.beginPath();
+	        var x = this.width/2, y = this.height/2;
+	        g.moveTo(x - 50, y);
+	        g.lineTo(x + 50, y);
+	        g.moveTo(x + 50 * Math.sin(Math.PI * time), y);
+	        g.lineTo(this.cursor.x, this.cursor.y);
+	        g.stroke();
+	     }
+	*/
+
+</script>
+

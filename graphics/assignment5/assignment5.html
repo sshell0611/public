@@ -44,6 +44,10 @@ to change the color of the square.-->
 		pent.setBorder('green');
 		pent.setFill('pink');
 
+		var oct = new Octagon(-.25, .25, .25);
+		oct.setBorder('blue');
+		oct.setFill('yellow');
+
 		var cnt = 0;
 
       canvas.update = function(g) {
@@ -64,6 +68,7 @@ to change the color of the square.-->
 			//square.transform(M, true);
 
 			drawShape(pent, g, this.width, this.height);
+			drawShape(oct, g, this.width, this.height);
 
 			//draw border last so is on top
 	        g.strokeStyle = 'black';

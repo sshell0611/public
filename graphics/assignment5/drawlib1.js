@@ -346,10 +346,10 @@ Pentagon.prototype = {
 			},
 
 		clone: function() {
-				var sq = new Square(this.x, this.y, this.size);
-				sq.setBorder(this.getBorder());
-				sq.setFill(this.getFill());
-				return sq;
+				var p = new Pentagon(this.x, this.y, this.r);
+				p.setBorder(this.getBorder());
+				p.setFill(this.getFill());
+				return p;
 		    },
 
 		//transform using a matrix 
@@ -377,6 +377,109 @@ Pentagon.prototype = {
 
 }
 
+
+//here x/y is the center point, r is the "radius" from the center
+function Octagon(x,y,r) {
+ this.vertices = [];
+ this.edges    = []; 
+ this.nEdges   = 0;
+ this.nVertex  = 0;
+ this.size	   = 0;
+ this.x		   = 0;
+ this.y 	   = 0;
+ this.r		   = 0;
+ this.border   = 'black';
+ this.fill	   = 'white';
+ this.init(x,y,r);
+}
+
+Octagon.prototype = {
+		init: function(x, y, r) {
+		       	if (x == undefined) throw "Undefined start x coordinate";
+		       	if (y == undefined) throw "Undefined start y coordinate";
+		       	if (r == undefined) throw "Undefined radius";
+				this.x = x;
+				this.y = y;
+				this.r = r;
+				this.nEdges  = 8;
+				this.nVertex = 8;
+				this.size	 = r;
+
+				var c1 = r * Math.cos(Math.PI / 4);
+				var s1 = r * Math.sin(Math.PI / 4);
+
+				//ignore the z coordinate and use z to represent 1 for a homogeneous point
+				var vtx0 = new Vector3(    x,   y-r, 1);
+				var vtx1 = new Vector3(-c1+x, -s1+y, 1);
+				var vtx2 = new Vector3( c1+x, -s1+y, 1);
+				var vtx3 = new Vector3( -r+x,     y, 1);
+				var vtx4 = new Vector3(  r+x,     y, 1);
+				var vtx5 = new Vector3(-c1+x,  s1+y, 1);
+				var vtx6 = new Vector3( c1+x,  s1+y, 1);
+				var vtx7 = new Vector3(    x,   y+r, 1);
+				this.vertices = [vtx0, vtx1, vtx2, vtx3, vtx4, vtx5, vtx6, vtx7];
+				this.edges    = [[0,2], [2,4], [4,6], [6,7], [7,5], [5,3], [3,1], [1,0]];
+		    },
+		numEdges: function() {
+				return this.nEdges;	
+			},
+		getVertex: function (v) {
+				if (v > 7)	throw "Invalid vertex, must be from 0 to 7";
+				return this.vertices[v];
+			},
+		setVertex: function(v, vertex) {
+				if (v > 7)	throw "Invalid vertex, must be from 0 to 7";
+				this.vertices[v] = vertex;
+			},
+		getEdge: function (e) {
+				if (e > 7)	throw "Invalid vertex, must be from 0 to 7";
+				return this.edges[e];
+			},
+		setBorder: function(color) {
+				this.border = color;	
+			},
+		getBorder: function() {
+				return this.border;	
+			},
+		setFill: function(color) {
+				this.fill = color;	
+			},
+
+		getFill: function() {
+				return this.fill;	
+			},
+		clone: function() {
+				var o = new Octagon(this.x, this.y, this.r);
+				o.setBorder(this.getBorder());
+				o.setFill(this.getFill());
+				return sq;
+		    },
+		//transform using a matrix 
+		//true/false flag to change the matrix
+		transform: function(M, inplace) {
+				var obj;
+				if (inplace == true)	
+					obj = this;
+				else
+					obj = this.clone();
+
+				//console.log(this.getX());
+
+				for (v = 0; v < this.nVertex; v++)
+				{
+					var newVtx = new Vector3(0, 0, 0);
+					M.transform(obj.getVertex(v), newVtx);
+					obj.setVertex(v, newVtx);
+				}
+
+				//console.log(this.getX());
+
+				return obj;
+			},
+
+}
+
+
 /////////////////////////////////////////////////////////////
 //  Helper functions
 /////////////////////////////////////////////////////////////
@@ -393,34 +496,6 @@ function toViewportX(x, w) {
 
 function toViewportY(y, w, h) {
 	return (h/2) - y * (w/2);
-}
-
-function drawSquare(square, canvas, w, h) {
-
-	canvas.strokeStyle = square.getBorder();
-	canvas.fillStyle = square.getFill();
-
-	//move to the first vertex
-	canvas.beginPath();
-
-	var vtx1 = square.getVertex(0);
-	var x = toViewportX(vtx1.x, w);
-	var y = toViewportY(vtx1.y, w, h);
-
-	canvas.moveTo(x, y);
-
-	//loop through all of the edges
-	for (e=0; e < square.numEdges(); e++)
-	{
-		var edge = square.getEdge(e);
-		var vtx  = square.getVertex(edge[1]);
-		var x    = toViewportX(vtx.x, w);
-		var y    = toViewportY(vtx.y, w, h);
-		canvas.lineTo(x, y);
-	}
-
-	canvas.fill();
-	canvas.stroke();
 }
 
 function drawShape(shape, canvas, w, h) {

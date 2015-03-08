@@ -498,6 +498,17 @@ function toViewportY(y, w, h) {
 	return (h/2) - y * (w/2);
 }
 
+function drawBorder(canvas, color, w, h) {
+	canvas.strokeStyle = color;
+	canvas.beginPath();
+	canvas.moveTo(0,0);
+	canvas.lineTo(w,0);
+	canvas.lineTo(w,h);
+	canvas.lineTo(0,h);
+	canvas.lineTo(0,0);
+	canvas.stroke();
+}
+
 function drawShape(shape, canvas, w, h) {
 
 	canvas.strokeStyle = shape.getBorder();

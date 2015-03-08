@@ -7,53 +7,79 @@
 <td><canvas id=canvas1 width=300 height=200></td>
 <td width=50></td>
 <td valign=top>
-Description here...
+<br>
+For Assignment 5, I will work with 3 different shapes that I created
+using vertices and edges:
 <p>
-For example,...
-<!--in this case I am showing how to use
-<b><big><code>cursor.x</code></big></b>
-and
-<b><big><code>cursor.y</code></big></b>
-to position a square, while using
-<b><big><code>cursor.z</code></big></b>
-(the indicator of whether the mouse button is pressed)
-to change the color of the square.-->
+<li>Square</li>
+<li>Pentagon</li>
+<li>Octagon</li>
 </td>
 </tr>
+<tr>
+<td><canvas id=canvas2 width=300 height=200></td>
+<td width=50></td>
+<td valign=top>
+<br>
+Translate
+</td>
+</tr>
+<tr>
+<td><canvas id=canvas3 width=300 height=200></td>
+<td width=50></td>
+<td valign=top>
+<br>
+Rotate 1
+</td>
+</tr>
+<tr>
+<td><canvas id=canvas4 width=300 height=200></td>
+<td width=50></td>
+<td valign=top>
+<br>
+Rotate 2
+</td>
+</tr>
+<tr>
+<td><canvas id=canvas5 width=300 height=200></td>
+<td width=50></td>
+<td valign=top>
+<br>
+Rotate 3
+</td>
+</tr>
+<tr>
+<td><canvas id=canvas6 width=300 height=200></td>
+<td width=50></td>
+<td valign=top>
+<br>
+Scaling
+</td>
+</tr>
+
 
 <script src=drawlib1.js></script>
 <script>
 
-   var canvas = initCanvas('canvas1');
-		var M = new Matrix(4,4);
-		M.identity();
-		//M.scale(0.55, 0.55, 0.55);
-		//M.rotateZ(0.6);
-		//M.display();
-		//var s = new Vector3(1,0,0);
-		//var d = new Vector3(0,0,0); 
-		//M.transform(s, d);
+   	var canvas = initCanvas('canvas1');
+	var M = new Matrix(4,4);
+	M.identity();
 
-		//this is our original cache of the square
-		var square = new Square(-0.25, -0.25, 0.25);
-		square.setBorder('green');
-		square.setFill('pink');
+	//this is our original cache of the square
+	var square = new Square(-0.15, -0.35, 0.20);
+	square.setBorder('black');
+	square.setFill('red');
 
-		//pentagon
-		var pent = new Pentagon(.25, -.25, .1);
-		pent.setBorder('green');
-		pent.setFill('pink');
+	//pentagon
+	var pent = new Pentagon(.35, -.15, .15);
+	pent.setBorder('green');
+	pent.setFill('pink');
 
-		var oct = new Octagon(-.25, .25, .25);
-		oct.setBorder('blue');
-		oct.setFill('yellow');
+	var oct = new Octagon(-.25, .25, .25);
+	oct.setBorder('blue');
+	oct.setFill('yellow');
 
-		var cnt = 0;
-
-      canvas.update = function(g) {
-
-			//console.log(square.getX());
-
+    canvas.update = function(g) {
 			//z rotation working
 			//var mult = Math.min(0.1 * Math.sin(time),.1);
 			//var mult = Math.sin(time);
@@ -67,33 +93,23 @@ to change the color of the square.-->
 
 			//square.transform(M, true);
 
+			drawShape(square, g, this.width, this.height);
 			drawShape(pent, g, this.width, this.height);
 			drawShape(oct, g, this.width, this.height);
 
 			//draw border last so is on top
-	        g.strokeStyle = 'black';
-	        g.beginPath();
-	        g.moveTo(0,0);
-	        g.lineTo(this.width,0);
-	        g.lineTo(this.width,this.height);
-	        g.lineTo(0,this.height);
-	        g.lineTo(0,0);
-	        g.stroke();
-	  
-			cnt++;
-	     }
+			drawBorder(g, 'black', this.width, this.height);
+ 	}
 
-   /*var canvas = initCanvas('canvas2');
+   var canvas = initCanvas('canvas2');
+
       canvas.update = function(g) {
-	        g.strokeStyle = 'blue';
-	        g.beginPath();
-	        g.moveTo(0,0);
-	        g.lineTo(this.width,0);
-	        g.lineTo(this.width,this.height);
-	        g.lineTo(0,this.height);
-	        g.lineTo(0,0);
-	        g.stroke();
+
+			//translate
+
+			drawBorder(g, 'black', this.width, this.height);
 	  
+			/*
 	        g.strokeStyle = 'red';
 	        g.beginPath();
 	        var x = this.width/2, y = this.height/2;
@@ -102,8 +118,49 @@ to change the color of the square.-->
 	        g.moveTo(x + 50 * Math.sin(Math.PI * time), y);
 	        g.lineTo(this.cursor.x, this.cursor.y);
 	        g.stroke();
+			*/
 	     }
-	*/
+
+   var canvas = initCanvas('canvas3');
+
+      canvas.update = function(g) {
+
+			//Rotation #1
+
+			drawBorder(g, 'black', this.width, this.height);
+	  
+	     }
+
+   var canvas = initCanvas('canvas4');
+
+      canvas.update = function(g) {
+
+			//Rotation #2
+
+			drawBorder(g, 'black', this.width, this.height);
+	  
+	     }
+
+   var canvas = initCanvas('canvas5');
+
+      canvas.update = function(g) {
+
+			//Rotation #3
+
+			drawBorder(g, 'black', this.width, this.height);
+	  
+	     }
+
+   var canvas = initCanvas('canvas6');
+
+      canvas.update = function(g) {
+
+			//Scaling
+
+			drawBorder(g, 'black', this.width, this.height);
+	  
+	     }
+
 
 </script>
 

@@ -16,6 +16,24 @@ Vector3.prototype = {
 		       },
 }
 
+function Vector4(x, y, z, p) {
+ this.x = 0;
+ this.y = 0;
+ this.z = 0;
+ this.p = 1;
+ this.set(x, y, z, p);
+}
+
+Vector4.prototype = {
+         set : function(x, y, z, p) {
+		          if (x !== undefined) this.x = x;
+		          if (y !== undefined) this.y = y;
+		          if (z !== undefined) this.z = z;
+		          if (p !== undefined) this.p = p;
+
+		       },
+}
+
 function Matrix(rows, cols) {
  this.rows = 0;
  this.cols = 0;
@@ -32,6 +50,7 @@ Matrix.prototype = {
 				for (idx =0; idx < this.elems; idx++) {
 					this.data[idx] = 0;
 				}
+				this.data[this.elems-1] = 1;
 		    },
 
 		get: function (r, c) {
@@ -124,8 +143,8 @@ Matrix.prototype = {
 				//take the inner product of row r
 				//in our matrix with vector src
 				var ip = 0;
-				var arr = [src.x, src.y, src.z];
-				for (c = 0; c < this.cols-1; c++) {
+				var arr = [src.x, src.y, src.z, 1];
+				for (c = 0; c < this.cols; c++) {
 					ip = ip + (this.get(r,c) * arr[c]);
 				}
 				return ip;
@@ -139,6 +158,7 @@ Matrix.prototype = {
 				dst.x = this.innerproduct(0, src);
 				dst.y = this.innerproduct(1, src);
 				dst.z = this.innerproduct(2, src);
+				//dst.z = 1;
 			},
 
 }
@@ -153,6 +173,8 @@ function Square(x,y,sz) {
  this.nEdges   = 0;
  this.nVertex  = 0;
  this.size	   = 0;
+ this.border   = 'black';
+ this.fill	   = 'white';
  this.init(x,y,sz);
 }
 
@@ -164,17 +186,27 @@ Square.prototype = {
 				this.nEdges  = 4;
 				this.nVertex = 4;
 				this.size	 = sz;
-				var vtx0 = new Vector3(x,   y   ,0);
-				var vtx1 = new Vector3(x+sz,y   ,0);
-				var vtx2 = new Vector3(x   ,y+sz,0);
-				var vtx3 = new Vector3(x+sz,y+sz,0);
+				//ignore the z coordinate and use z to represent 1 for a homogeneous point
+				var vtx0 = new Vector3(x,   y   , 1);
+				var vtx1 = new Vector3(x+sz,y   , 1);
+				var vtx2 = new Vector3(x   ,y+sz, 1);
+				var vtx3 = new Vector3(x+sz,y+sz, 1);
 				this.vertices = [vtx0, vtx1, vtx2, vtx3];
 				this.edges    = [[0,1], [1,3], [3,2], [2,0]];
 		    },
 
+		numEdges: function() {
+				return this.nEdges;	
+			},
+
 		getVertex: function (v) {
 				if (v > 3)	throw "Invalid vertex, must be from 0 to 3";
 				return this.vertices[v];
+			},
+
+		setVertex: function(v, vertex) {
+				if (v > 3)	throw "Invalid vertex, must be from 0 to 3";
+				this.vertices[v] = vertex;
 			},
 
 		getEdge: function (e) {
@@ -182,39 +214,103 @@ Square.prototype = {
 				return this.edges[e];
 			},
 
+		setBorder: function(color) {
+				this.border = color;	
+			},
+
+		getBorder: function() {
+				return this.border;	
+			},
+
+		setFill: function(color) {
+				this.fill = color;	
+			},
+
+		getFill: function() {
+				return this.fill;	
+			},
+
 		clone: function() {
 				var x  = this.vertices[0].x;
 				var y  = this.vertices[1].y;
 				var sq = new Square(x, y, this.size);
+				sq.setBorder(this.getBorder());
+				sq.setFill(this.getFill());
 				return sq;
 		    },
 
-		//transform using a matrix
-		transform: function(M) {
+		//transform using a matrix 
+		//true/false flag to change the matrix
+		transform: function(M, inplace) {
+				var sq;
+				if (inplace == true)	
+					sq = this;
+				else
+					sq = this.clone();
+
+				//console.log(this.getX());
+
+				for (v = 0; v < this.nVertex; v++)
+				{
+					var newVtx = new Vector3(0, 0, 0);
+					M.transform(sq.getVertex(v), newVtx);
+					sq.setVertex(v, newVtx);
+				}
+
+				//console.log(this.getX());
+
+				return sq;
 			},
 
+		getX: function() {
+				return this.vertices[0].x;	
+			},
 }
 
 /////////////////////////////////////////////////////////////
 //  Helper functions
 /////////////////////////////////////////////////////////////
 
-function transformViewport(x, y, w, h) {
+function toViewport(x, y, w, h) {
 	px = (w / 2) + x * (w / 2);
 	py = (h / 2) - y * (w / 2);
 	return [px, py];
 }
 
+function toViewportX(x, w) {
+	return (w/2) + x * (w/2);
+}
+
+function toViewportY(y, w, h) {
+	return (h/2) - y * (w/2);
+}
+
 function drawSquare(square, canvas, w, h) {
 
-    var x = w/2, y = h/2;
+	canvas.strokeStyle = square.getBorder();
+	canvas.fillStyle = square.getFill();
 
-	canvas.strokeStyle = 'red';
+	//move to the first vertex
 	canvas.beginPath();
-	canvas.moveTo(x-50,y);
-	canvas.lineTo(x+50,y);
-	canvas.stroke();
 
+	var vtx1 = square.getVertex(0);
+	var x = toViewportX(vtx1.x, w);
+	var y = toViewportY(vtx1.y, w, h);
+
+	canvas.moveTo(x, y);
+
+	//loop through all of the edges
+	for (e=0; e < square.numEdges(); e++)
+	{
+		var edge = square.getEdge(e);
+		var vtx  = square.getVertex(edge[1]);
+		var x    = toViewportX(vtx.x, w);
+		var y    = toViewportY(vtx.y, w, h);
+		canvas.lineTo(x, y);
+	}
+
+	canvas.fill();
+	canvas.stroke();
 }
 
 

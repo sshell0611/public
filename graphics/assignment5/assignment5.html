@@ -28,30 +28,41 @@ to change the color of the square.-->
 		var M = new Matrix(4,4);
 		M.identity();
 		//M.scale(0.55, 0.55, 0.55);
-		M.rotateZ(0.6);
+		//M.rotateZ(0.6);
 		//M.display();
-		var s = new Vector3(1,0,0);
-		var d = new Vector3(0,0,0); 
-		M.transform(s, d);
+		//var s = new Vector3(1,0,0);
+		//var d = new Vector3(0,0,0); 
+		//M.transform(s, d);
 
 		//this is our original cache of the square
-		var square = new Square(-0.5, -0.5, 1);
+		var origsquare = new Square(-0.25, -0.25, 0.25);
+		origsquare.setBorder('green');
+		origsquare.setFill('pink');
 
-		//console.log(s);
+		var square = new Square(-0.25, -0.25, 0.25);
+		square.setBorder('green');
+		square.setFill('pink');
+
+		var cnt = 0;
 
       canvas.update = function(g) {
 
+			//console.log(square.getX());
+
+			//z rotation working
+			var mult = Math.min(0.1 * Math.sin(time),.1);
+			//var mult = Math.sin(time);
+			var tmp  = .1;
+			var rot  = .1 * Math.sin(Math.PI * time);
+			M.rotateZ(rot);
+			//M.translate(mult, 0, 0);
+			//M.rotateY(mult);
+			//var scale = (this.cursor.z) ? 1.1 : .9;
+			//M.scale(scale, scale, scale);
+
+			square.transform(M, true);
+
 			drawSquare(square, g, this.width, this.height);
-
-
-	        //g.fillStyle = this.cursor.z ? 'red' : 'rgb(255,255,128)';
-	        //g.beginPath();
-	        //var x = this.cursor.x, y = this.cursor.y;
-	        //g.moveTo(x-50,y-50);
-	        //g.lineTo(x+50,y-50);
-	        //g.lineTo(x+50,y+50);
-	        //g.lineTo(x-50,y+50);
-	        //g.fill();
 
 			//draw border last so is on top
 	        g.strokeStyle = 'black';
@@ -63,6 +74,7 @@ to change the color of the square.-->
 	        g.lineTo(0,0);
 	        g.stroke();
 	  
+			cnt++;
 	     }
 
    /*var canvas = initCanvas('canvas2');

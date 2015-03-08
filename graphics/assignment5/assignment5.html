@@ -35,13 +35,14 @@ to change the color of the square.-->
 		//M.transform(s, d);
 
 		//this is our original cache of the square
-		var origsquare = new Square(-0.25, -0.25, 0.25);
-		origsquare.setBorder('green');
-		origsquare.setFill('pink');
-
 		var square = new Square(-0.25, -0.25, 0.25);
 		square.setBorder('green');
 		square.setFill('pink');
+
+		//pentagon
+		var pent = new Pentagon(.25, -.25, .1);
+		pent.setBorder('green');
+		pent.setFill('pink');
 
 		var cnt = 0;
 
@@ -50,19 +51,19 @@ to change the color of the square.-->
 			//console.log(square.getX());
 
 			//z rotation working
-			var mult = Math.min(0.1 * Math.sin(time),.1);
+			//var mult = Math.min(0.1 * Math.sin(time),.1);
 			//var mult = Math.sin(time);
-			var tmp  = .1;
-			var rot  = .1 * Math.sin(Math.PI * time);
-			M.rotateZ(rot);
+			//var tmp  = .1;
+			//var rot  = .1 * Math.sin(Math.PI * time);
+			//M.rotateY(rot);
 			//M.translate(mult, 0, 0);
 			//M.rotateY(mult);
 			//var scale = (this.cursor.z) ? 1.1 : .9;
 			//M.scale(scale, scale, scale);
 
-			square.transform(M, true);
+			//square.transform(M, true);
 
-			drawSquare(square, g, this.width, this.height);
+			drawShape(pent, g, this.width, this.height);
 
 			//draw border last so is on top
 	        g.strokeStyle = 'black';

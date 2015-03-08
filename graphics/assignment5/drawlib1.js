@@ -452,7 +452,7 @@ Octagon.prototype = {
 				var o = new Octagon(this.x, this.y, this.r);
 				o.setBorder(this.getBorder());
 				o.setFill(this.getFill());
-				return sq;
+				return o;
 		    },
 		//transform using a matrix 
 		//true/false flag to change the matrix

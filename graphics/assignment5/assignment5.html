@@ -21,7 +21,12 @@ using vertices and edges:
 <td width=50></td>
 <td valign=top>
 <br>
-Translate
+This canvas demonstrates a Matrix translation of the coordinates of the shapes. 
+The octagon has only its x-coordinate translated; The pentagon has only its y-coordinate
+translated; The square has both x and y translated.
+<p>
+The translations are done at a different pace by varying the values in the translation
+matrix. Higher values will move the shape more on each clock tick.
 </td>
 </tr>
 <tr>
@@ -61,9 +66,6 @@ Scaling
 <script src=drawlib1.js></script>
 <script>
 
-   	var canvas = initCanvas('canvas1');
-	var M = new Matrix(4,4);
-	M.identity();
 
 	//this is our original cache of the square
 	var square = new Square(-0.15, -0.35, 0.20);
@@ -75,10 +77,12 @@ Scaling
 	pent.setBorder('green');
 	pent.setFill('pink');
 
+	//octagon
 	var oct = new Octagon(-.25, .25, .25);
 	oct.setBorder('blue');
 	oct.setFill('yellow');
 
+   	var canvas = initCanvas('canvas1');
     canvas.update = function(g) {
 			//z rotation working
 			//var mult = Math.min(0.1 * Math.sin(time),.1);
@@ -101,25 +105,80 @@ Scaling
 			drawBorder(g, 'black', this.width, this.height);
  	}
 
-   var canvas = initCanvas('canvas2');
 
-      canvas.update = function(g) {
+   ////////////////////////////////////////////////////////////////////////
+   // Canvas 2 - Translation
+   ////////////////////////////////////////////////////////////////////////
+   var canvas = initCanvas('canvas2');
+   var sqmult = 1;
+   var octmult = 1;
+   var pentmult = -1;
+   square2 = square.clone();
+   pent2 = pent.clone();
+   oct2 = oct.clone();
+
+   var M_sq = new Matrix(4,4);
+   M_sq.identity();
+   var M_pent = new Matrix(4,4);
+   M_pent.identity();
+   var M_oct = new Matrix(4,4);
+   M_oct.identity();
+
+   canvas.update = function(g) {
 
 			//translate
+			var sqx = square2.getVertex(0).x;
+			var octx = oct2.getVertex(0).x;
+			var penty = pent2.getVertex(0).y;
+
+			if (sqx >= 0.5)		sqmult = -1;
+			if (sqx <= -0.4)	sqmult = 1;
+
+			var sqtr = 0.004 * sqmult;
+			M_sq.identity();
+			M_sq.translate(sqtr, sqtr, 0);
+			square2.transform(M_sq, true);
+			
+			drawShape(square2, g, this.width, this.height);
+
+			if (penty >= 0.4)	pentmult = -1;
+			if (penty <= -0.6)  pentmult = 1;
+
+			var pntr = 0.005 * pentmult;
+			M_pent.identity();
+			M_pent.translate(0, pntr, 0);
+			pent2.transform(M_pent, true);
+
+			drawShape(pent2, g, this.width, this.height);
+
+			if (octx >= 0.6)   octmult = -1;
+			if (octx <= -0.6)  octmult = 1;
+		
+			var octr = 0.002 * octmult;
+			M_oct.identity();
+			M_oct.translate(octr, 0, 0);
+			oct2.transform(M_oct, true);
+
+			drawShape(oct2, g, this.width, this.height);
 
 			drawBorder(g, 'black', this.width, this.height);
 	  
-			/*
-	        g.strokeStyle = 'red';
-	        g.beginPath();
-	        var x = this.width/2, y = this.height/2;
-	        g.moveTo(x - 50, y);
-	        g.lineTo(x + 50, y);
-	        g.moveTo(x + 50 * Math.sin(Math.PI * time), y);
-	        g.lineTo(this.cursor.x, this.cursor.y);
-	        g.stroke();
-			*/
 	     }
+
+
+   ////////////////////////////////////////////////////////////////////////
+   // Canvas 3 - Rotation around the x-axis
+   ////////////////////////////////////////////////////////////////////////
+   square3 	= square.clone();
+   pent3 	= pent.clone();
+   oct3 	= oct.clone();
+
+   var M_sq3 	= new Matrix(4,4);
+   var M_pent3 	= new Matrix(4,4);
+   var M_oct3	= new Matrix(4,4);
+   M_sq3.identity();
+   M_pent3.identity();
+   M_oct3.identity();
 
    var canvas = initCanvas('canvas3');
 
@@ -127,9 +186,28 @@ Scaling
 
 			//Rotation #1
 
+  			drawShape(square3, g, this.width, this.height);
+			drawShape(pent3, g, this.width, this.height);
+			drawShape(oct3, g, this.width, this.height);
+
 			drawBorder(g, 'black', this.width, this.height);
 	  
 	     }
+
+   ////////////////////////////////////////////////////////////////////////
+   // Canvas 4 - Rotation around the y-axis
+   ////////////////////////////////////////////////////////////////////////
+
+   square4 	= square.clone();
+   pent4 	= pent.clone();
+   oct4 	= oct.clone();
+
+   var M_sq4 	= new Matrix(4,4);
+   var M_pent4 	= new Matrix(4,4);
+   var M_oct4	= new Matrix(4,4);
+   M_sq4.identity();
+   M_pent4.identity();
+   M_oct4.identity();
 
    var canvas = initCanvas('canvas4');
 
@@ -137,9 +215,29 @@ Scaling
 
 			//Rotation #2
 
+  			drawShape(square4, g, this.width, this.height);
+			drawShape(pent4, g, this.width, this.height);
+			drawShape(oct4, g, this.width, this.height);
+
 			drawBorder(g, 'black', this.width, this.height);
 	  
 	     }
+
+   ////////////////////////////////////////////////////////////////////////
+   // Canvas 5 - Rotation around the z-axis
+   ////////////////////////////////////////////////////////////////////////
+
+   square5 	= square.clone();
+   pent5 	= pent.clone();
+   oct5 	= oct.clone();
+
+   var M_sq5 	= new Matrix(4,4);
+   var M_pent5 	= new Matrix(4,4);
+   var M_oct5	= new Matrix(4,4);
+   M_sq5.identity();
+   M_pent5.identity();
+   M_oct5.identity();
+
 
    var canvas = initCanvas('canvas5');
 
@@ -147,15 +245,38 @@ Scaling
 
 			//Rotation #3
 
+  			drawShape(square5, g, this.width, this.height);
+			drawShape(pent5, g, this.width, this.height);
+			drawShape(oct5, g, this.width, this.height);
+
 			drawBorder(g, 'black', this.width, this.height);
 	  
 	     }
+
+   ////////////////////////////////////////////////////////////////////////
+   // Canvas 6 - scaling
+   ////////////////////////////////////////////////////////////////////////
+
+   square6 	= square.clone();
+   pent6 	= pent.clone();
+   oct6 	= oct.clone();
+
+   var M_sq6 	= new Matrix(4,4);
+   var M_pent6 	= new Matrix(4,4);
+   var M_oct6	= new Matrix(4,4);
+   M_sq6.identity();
+   M_pent6.identity();
+   M_oct6.identity();
 
    var canvas = initCanvas('canvas6');
 
       canvas.update = function(g) {
 
 			//Scaling
+
+  			drawShape(square6, g, this.width, this.height);
+			drawShape(pent6, g, this.width, this.height);
+			drawShape(oct6, g, this.width, this.height);
 
 			drawBorder(g, 'black', this.width, this.height);
 	  

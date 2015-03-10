@@ -34,7 +34,7 @@ matrix. Higher values will move the shape more on each clock tick.
 <td width=50></td>
 <td valign=top>
 <br>
-Rotate 1
+Rotation around the x-axis
 </td>
 </tr>
 <tr>
@@ -42,7 +42,7 @@ Rotate 1
 <td width=50></td>
 <td valign=top>
 <br>
-Rotate 2
+Rotatation around the y-axis
 </td>
 </tr>
 <tr>
@@ -50,7 +50,8 @@ Rotate 2
 <td width=50></td>
 <td valign=top>
 <br>
-Rotate 3
+Rotation around the z-axis.
+Click to rotate the shapes in the reverse direction.
 </td>
 </tr>
 <tr>
@@ -58,7 +59,7 @@ Rotate 3
 <td width=50></td>
 <td valign=top>
 <br>
-Scaling
+Scaling - click and hold to reverse the scaling
 </td>
 </tr>
 
@@ -84,18 +85,6 @@ Scaling
 
    	var canvas = initCanvas('canvas1');
     canvas.update = function(g) {
-			//z rotation working
-			//var mult = Math.min(0.1 * Math.sin(time),.1);
-			//var mult = Math.sin(time);
-			//var tmp  = .1;
-			//var rot  = .1 * Math.sin(Math.PI * time);
-			//M.rotateY(rot);
-			//M.translate(mult, 0, 0);
-			//M.rotateY(mult);
-			//var scale = (this.cursor.z) ? 1.1 : .9;
-			//M.scale(scale, scale, scale);
-
-			//square.transform(M, true);
 
 			drawShape(square, g, this.width, this.height);
 			drawShape(pent, g, this.width, this.height);
@@ -118,10 +107,10 @@ Scaling
    oct2 = oct.clone();
 
    var M_sq = new Matrix(4,4);
-   M_sq.identity();
    var M_pent = new Matrix(4,4);
-   M_pent.identity();
    var M_oct = new Matrix(4,4);
+   M_sq.identity();
+   M_pent.identity();
    M_oct.identity();
 
    canvas.update = function(g) {
@@ -169,9 +158,18 @@ Scaling
    ////////////////////////////////////////////////////////////////////////
    // Canvas 3 - Rotation around the x-axis
    ////////////////////////////////////////////////////////////////////////
-   square3 	= square.clone();
-   pent3 	= pent.clone();
-   oct3 	= oct.clone();
+
+   var pent3 = new Pentagon(.65, 0, .15);
+   pent3.setBorder('green');
+   pent3.setFill('pink');
+
+   var square3 = new Square(0, 0, 0.20);
+   square3.setBorder('black');
+   square3.setFill('red');
+
+   var oct3 = new Octagon(-.65, 0, .25);
+   oct3.setBorder('blue');
+   oct3.setFill('yellow');
 
    var M_sq3 	= new Matrix(4,4);
    var M_pent3 	= new Matrix(4,4);
@@ -184,7 +182,19 @@ Scaling
 
       canvas.update = function(g) {
 
-			//Rotation #1
+			//Rotation #1 - x-axis
+
+			var octrot = Math.sin(Math.PI * time);
+			M_oct3.rotateX(octrot);
+			oct3.transform(M_oct3, true);
+
+			var sqrot = 0.025 * Math.cos(Math.PI * time);
+			M_sq3.rotateX(sqrot);
+			square3.transform(M_sq3, true);
+
+			var prot = 0.0005 * Math.sin(Math.PI * time) - .005;
+			M_pent3.rotateX(prot);
+			pent3.transform(M_pent3, true);
 
   			drawShape(square3, g, this.width, this.height);
 			drawShape(pent3, g, this.width, this.height);
@@ -198,9 +208,18 @@ Scaling
    // Canvas 4 - Rotation around the y-axis
    ////////////////////////////////////////////////////////////////////////
 
-   square4 	= square.clone();
-   pent4 	= pent.clone();
-   oct4 	= oct.clone();
+   var pent4 = new Pentagon(0, -.40, .15);
+   pent4.setBorder('green');
+   pent4.setFill('pink');
+
+   var square4 = new Square(0, 0, 0.20);
+   square4.setBorder('black');
+   square4.setFill('red');
+
+   var oct4 = new Octagon(0, .40, .25);
+   oct4.setBorder('blue');
+   oct4.setFill('yellow');
+
 
    var M_sq4 	= new Matrix(4,4);
    var M_pent4 	= new Matrix(4,4);
@@ -213,7 +232,20 @@ Scaling
 
       canvas.update = function(g) {
 
-			//Rotation #2
+			//Rotation #2 - y-axis
+
+			var octrot = 0.1 * Math.sin(Math.PI * time) - 0.01;
+			M_oct4.rotateY(octrot);
+			oct4.transform(M_oct4, true);
+
+			//var sqrot = 0.25 * Math.cos(Math.PI * time);
+			var sqrot = 0.0005 * Math.sin(Math.PI * time) - .005;
+			M_sq4.rotateY(sqrot);
+			square4.transform(M_sq4, true);
+
+			var prot = 0.25 * Math.cos(Math.PI * time);
+			M_pent4.rotateY(prot);
+			pent4.transform(M_pent4, true);
 
   			drawShape(square4, g, this.width, this.height);
 			drawShape(pent4, g, this.width, this.height);
@@ -227,9 +259,17 @@ Scaling
    // Canvas 5 - Rotation around the z-axis
    ////////////////////////////////////////////////////////////////////////
 
-   square5 	= square.clone();
-   pent5 	= pent.clone();
-   oct5 	= oct.clone();
+   var pent5 = new Pentagon(.55, -.40, .15);
+   pent5.setBorder('green');
+   pent5.setFill('pink');
+   
+   var square5 = new Square(0, 0, 0.20);
+   square5.setBorder('black');
+   square5.setFill('red');
+
+   var oct5 = new Octagon(-.55, .35, .25);
+   oct5.setBorder('blue');
+   oct5.setFill('yellow');
 
    var M_sq5 	= new Matrix(4,4);
    var M_pent5 	= new Matrix(4,4);
@@ -243,7 +283,22 @@ Scaling
 
       canvas.update = function(g) {
 
-			//Rotation #3
+			//Rotation #3 - z-axis
+			var mult1 = Math.sin(Math.PI * time);
+		    var mult2 = Math.cos(Math.PI * time);
+
+			var octrot = 0.1 * (this.cursor.z ? mult1 : mult2);
+			M_oct5.rotateZ(octrot);
+			oct5.transform(M_oct5, true);
+
+			var sqrot = 0.05 * (this.cursor.z ? mult2 : mult1);
+			M_sq5.rotateZ(sqrot);
+			square5.transform(M_sq5, true);
+
+			var prot = 0.5 * (this.cursor.z ? mult2 : mult1);
+			M_pent5.rotateZ(prot);
+			pent5.transform(M_pent5, true);
+
 
   			drawShape(square5, g, this.width, this.height);
 			drawShape(pent5, g, this.width, this.height);
@@ -273,6 +328,18 @@ Scaling
       canvas.update = function(g) {
 
 			//Scaling
+			var scale = (this.cursor.z) ? 1.001 : .999;
+			M_oct6.scale(scale, scale, scale);
+			oct6.transform(M_oct6, true);
+
+			var scale2 = (this.cursor.z) ? .999 : 1.001;
+			M_sq6.scale(scale2, 1, scale2);
+			square6.transform(M_sq6, true);
+
+			var scale3 = (this.cursor.z) ? .999 : 1.001;
+			M_pent6.scale(1, scale3, scale3);
+			pent6.transform(M_pent6, true);
+
 
   			drawShape(square6, g, this.width, this.height);
 			drawShape(pent6, g, this.width, this.height);

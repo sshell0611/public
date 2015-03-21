@@ -518,6 +518,117 @@ Octagon.prototype = {
 
 }
 
+/////////////////////////////////////////////////////////////
+//  Parametric Surface
+/////////////////////////////////////////////////////////////
+
+function Cylinder() {
+	this.xadj = 3.5;
+	this.yadj = 2.5;
+	this.nu = 50;
+	this.nv = 20;
+	this.vertices = [];
+	this.vertices.length = this.nu * this.nv;
+
+	this.uv2xyz = function(u, v, dst) {
+		var x = Math.sin(2 * Math.PI * u)/this.xadj;
+		var y = (2 * v - 1)/this.yadj;
+		var z = Math.cos(2 * Math.PI * u)/this.xadj;
+		dst.set(x, y, z);
+	}
+
+	this.build = function (elapsed) {
+			var du = 1 / this.nu;
+			var dv = 1 / this.nv;
+			var i = 0;
+			for (var u = 0; u < .999; u += du) {
+				for (var v = 0; v < .999; v += dv) {
+						//square of 4 vertexes
+						var sq = [new Vector3(), new Vector3(), new Vector3(), new Vector3()];
+						this.uv2xyz(u	, v	  , sq[0]);
+						this.uv2xyz(u+du, v	  , sq[1]);
+						this.uv2xyz(u+du, v+dv, sq[2]);
+						this.uv2xyz(u	, v+dv, sq[3]);
+						this.vertices[i] = sq;
+						i += 1;
+				}
+			}
+	}
+
+	this.draw = function(g, w, h) {
+			g.beginPath();
+			for (var idx = 0; idx < this.vertices.length; idx++) {
+
+				var initVtx = this.vertices[idx][0];
+				var px = [];
+				viewPort(initVtx, px, w, h);
+				g.moveTo(px[0], px[1]);
+
+				for (var v = 1; v < 4; v++) {
+					var px = [];		
+					viewPort(this.vertices[idx][v], px, w, h);
+					g.lineTo(px[0], px[1]);
+				}
+			}
+			g.fill();
+			g.stroke();
+	}
+}
+
+function Sphere() {
+	this.xadj = 3.5;
+	this.yadj = 2.5;
+	this.nu = 50;
+	this.nv = 20;
+	this.vertices = [];
+	this.vertices.length = this.nu * this.nv;
+
+	this.uv2xyz = function(u, v, dst) {
+		var theta = 2 * Math.PI * u;
+		var phi   = Math.PI * v - Math.PI/2;
+		var x = (Math.cos(phi) * Math.sin(theta)) /this.xadj;
+		var y = Math.sin(phi) / this.yadj;
+		var z = (Math.cos(phi) * Math.cos(theta))/this.xadj;
+		dst.set(x, y, z);
+	}
+
+	this.build = function (elapsed) {
+			var du = 1 / this.nu;
+			var dv = 1 / this.nv;
+			var i = 0;
+			for (var u = 0; u < .999; u += du) {
+				for (var v = 0; v < .999; v += dv) {
+						//square of 4 vertexes
+						var sq = [new Vector3(), new Vector3(), new Vector3(), new Vector3()];
+						this.uv2xyz(u	, v	  , sq[0]);
+						this.uv2xyz(u+du, v	  , sq[1]);
+						this.uv2xyz(u+du, v+dv, sq[2]);
+						this.uv2xyz(u	, v+dv, sq[3]);
+						this.vertices[i] = sq;
+						i += 1;
+				}
+			}
+	}
+
+	this.draw = function(g, w, h) {
+			g.beginPath();
+			for (var idx = 0; idx < this.vertices.length; idx++) {
+
+				var initVtx = this.vertices[idx][0];
+				var px = [];
+				viewPort(initVtx, px, w, h);
+				g.moveTo(px[0], px[1]);
+
+				for (var v = 1; v < 4; v++) {
+					var px = [];		
+					viewPort(this.vertices[idx][v], px, w, h);
+					g.lineTo(px[0], px[1]);
+				}
+			}
+			g.fill();
+			g.stroke();
+	}
+}
 
 /////////////////////////////////////////////////////////////
 //  Helper functions

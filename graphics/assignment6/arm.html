@@ -1,0 +1,93 @@
+
+<h2>Assignment 5</h2>
+<p><hr>&nbsp;<p>
+
+<table>
+<tr>
+<td><canvas id=canvas1 width=300 height=300></td>
+<td width=50></td>
+<td valign=top>
+<br>
+Test swinging arm
+</td>
+</tr>
+
+
+<script src=drawlib1.js></script>
+<script>
+
+	var id     = 'canvas1';
+   	var canvas = initCanvas(id);
+
+	var origin 		= new Vector3(0,0,0);
+	var shoulder 	= new Vector3();
+	var elbow 		= new Vector3();
+	var wrist 		= new Vector3();
+	var fingertips 	= new Vector3();
+
+	var M = new Matrix();
+	var n = 0;
+
+    canvas.update = function(g) {
+
+			this.g = g;
+			n = n+1;
+
+			var theta = 3 * time;
+
+			g.lineCap  = "round";
+			g.lineJoin = "round";
+
+			g.fillStyle = 'rgb(220,250,255)';
+
+			g.beginPath();
+			g.moveTo(0,0);
+			g.lineTo(this.width, 0);
+			g.lineTo(this.width, this.height);
+			g.lineTo(0, this.height);
+			g.fill();
+
+			g.lineWidth = 10;
+
+			M.identity();
+
+			M.translate(.2, .3, 0);
+
+			M.rotateZ(Math.cos(theta) * .5);
+			M.transform(origin, shoulder);
+
+			//console.log("Shoulder");
+			//console.log(shoulder.x);
+			//console.log(shoulder.y);
+			//console.log(shoulder.z);
+
+			M.translate(0, -.2, 0);
+
+			M.transform(origin, elbow);
+
+			//console.log("Elbow");
+			//console.log(elbow.x);
+			//console.log(elbow.y);
+			//console.log(elbow.z);
+
+			M.rotateZ(Math.sin(theta) * .5 + .5);
+			M.translate(0, -.1, 0);
+
+			M.transform(origin, wrist);
+
+			M.rotateZ(Math.cos(theta) * .25 - .25);
+			M.translate(0, -.1, 0);
+
+			M.transform(origin, fingertips);
+
+			drawLine(id, shoulder, elbow);
+			drawLine(id, elbow, wrist);
+			drawLine(id, wrist, fingertips);
+
+			//if (n == 5)
+			//	throw 'error';
+ 	}
+
+
+</script>
+

@@ -902,7 +902,7 @@ function drawBorder(canvas, color, w, h) {
 function drawShape(shape, canvas, w, h) {
 
 	canvas.strokeStyle = shape.getBorder();
-	//canvas.fillStyle = shape.getFill();
+	canvas.fillStyle = shape.getFill();
 
 	//move to the first vertex
 	canvas.beginPath();

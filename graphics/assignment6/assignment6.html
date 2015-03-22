@@ -28,7 +28,10 @@ are also alternating pulled higher and lower which results in a stretching effec
 <td width=50></td>
 <td valign=top>
 <br>
-Animated Scene
+<b>Animated Scene</b>
+In this scene, I animated a stick figure who is doing jumping jacks trying to grab a gold crown.  The figure comes
+close but will never grab it.  This uses multiple moving parts and matrices that build on each other to produce
+a connected scene each frame.
 </td>
 </tr>
 <tr>
@@ -59,7 +62,7 @@ Perspective
 
 
    ////////////////////////////////////////////////////////////////////////
-   // Canvas 2 - Translation
+   // Canvas 2 - parameterized surfacc
    ////////////////////////////////////////////////////////////////////////
    var canvas = initCanvas('canvas2');
 
@@ -77,13 +80,167 @@ Perspective
 
 
    ////////////////////////////////////////////////////////////////////////
-   // Canvas 3 - Rotation around the x-axis
+   // Canvas 3 - animation
    ////////////////////////////////////////////////////////////////////////
 
+	var origin 		= new Vector3(0,.2,0);
+	var neck 		= new Vector3();
+	var torso		= new Vector3();
+	var waist		= new Vector3();
+	var shoulder1 	= new Vector3();
+	var elbow1 		= new Vector3();
+	var wrist1 		= new Vector3();
+	var shoulder2 	= new Vector3();
+	var elbow2 		= new Vector3();
+	var wrist2 		= new Vector3();
+	var knee1		= new Vector3();
+	var ankle1		= new Vector3();
+	var foot1		= new Vector3();
+	var knee2		= new Vector3();
+	var ankle2		= new Vector3();
+	var foot2 		= new Vector3();
+	var ball        = new Pentagon(0, .3, .065);
+	ball.setFill('gold');
 
-   var canvas = initCanvas('canvas3');
+	//var fingertips 	= new Vector3();
+
+	var m0 = new Matrix();
+	var m1 = new Matrix();
+	var m2 = new Matrix();
+	var m3 = new Matrix();
+	var m4 = new Matrix();
+	var m5 = new Matrix();
+	var h1 = new Matrix();
+
+	var n = 0;
+	var ballmult = 1;
+
+	var id     = 'canvas3';
+   	var canvas = initCanvas(id);
 
       canvas.update = function(g) {
+
+			this.g = g;
+			n = n+1;
+
+			var theta = 5 * time;
+
+			g.lineCap  = "round";
+			g.lineJoin = "round";
+
+			g.fillStyle = 'rgb(220,250,255)';
+
+			g.beginPath();
+			g.moveTo(0,0);
+			g.lineTo(this.width, 0);
+			g.lineTo(this.width, this.height);
+			g.lineTo(0, this.height);
+			g.fill();
+
+			g.lineWidth = 3;
+
+			h1.identity();
+			m0.identity();
+			m1.identity();
+			m2.identity();
+			m3.identity();
+			m4.identity();
+			m5.identity();
+
+			//start at the origin for the neck
+
+			//the torso is slightly below the neck
+			var jump = Math.cos(theta) * 0.1;
+			var bally = ball.getVertex(0).y;
+
+			if (bally >= 0.57)	ballmult = -1;
+			if (bally <= 0.47)   ballmult = 1;
+
+			var ballr = 0.005 * ballmult;
+
+			h1.translate(0, ballr, 0);
+			
+			m0.translate(0, jump, 0);
+			ball.transform(h1, true);
+			m0.rotateZ(Math.cos(theta) * .05);
+			m0.transform(origin, neck);
+
+			m1.translate(0, -.06 + jump, 0);
+			m2.translate(0, -.06 + jump, 0);
+			m3.translate(0, -.06 + jump, 0);
+			m4.translate(0, -.06 + jump, 0);
+			m5.translate(0, -.06 + jump, 0);
+
+			m1.transform(origin, torso);
+
+			m1.rotateZ(Math.cos(theta) * .25);
+
+			//shoulders & wrists
+			m1.translate(.15, .10, 0);
+			m1.transform(origin, elbow2);
+
+			//m1.rotateZ(Math.sin(theta) * .25 + .25);
+			m1.rotateZ(Math.sin(theta) * .15);
+
+			m1.translate(0, .07, 0);
+			m1.transform(origin, wrist2);
+
+			m2.rotateZ(-Math.cos(theta) * .25);
+
+			m2.translate(-.15, .10, 0);
+			m2.transform(origin, elbow1);
+
+			m2.rotateZ(-Math.sin(theta) * .15);
+
+			m2.translate(0, .07, 0);
+			m2.transform(origin, wrist1);
+
+			//the waist is below the torso
+			m3.translate(0, -.2, 0);
+			m4.translate(0, -.2, 0);
+			m5.translate(0, -.2, 0);
+
+			m3.rotateZ(Math.cos(theta) * .05);
+			m3.transform(origin, waist);
+
+			//legs
+
+			m4.translate(-.1, -.2, 0);
+			m4.rotateZ(Math.cos(theta) * .3 - .1);
+
+			m4.transform(origin, knee1);
+
+			m5.translate(.1, -.2, 0);
+			m5.rotateZ(-Math.cos(theta) * .3 + .1);
+
+			m5.transform(origin, knee2);
+
+			m4.translate(-.02, -.15, 0);
+			m4.transform(origin, ankle1);
+
+			m5.translate(.02, -.15, 0);
+			m5.transform(origin, ankle2);
+
+			m4.translate(-.01, -.03, 0);
+			m4.transform(origin, foot1);
+
+			m5.translate(.01, -.03, 0);
+			m5.transform(origin, foot2);
+
+			drawShape(ball, g, this.width, this.height);
+			drawLine(id, neck,   torso);
+			drawLine(id, torso,  elbow1);
+			drawLine(id, elbow1, wrist1);
+			drawLine(id, torso,  elbow2);
+			drawLine(id, elbow2, wrist2);
+			drawLine(id, torso, waist);
+			drawLine(id, waist, knee1);
+			drawLine(id, knee1, ankle1);
+			drawLine(id, waist, knee2);
+			drawLine(id, knee2, ankle2);
+			drawLine(id, ankle1, foot1);
+			drawLine(id, ankle2, foot2);
+
 
 			drawBorder(g, 'black', this.width, this.height);
 	  

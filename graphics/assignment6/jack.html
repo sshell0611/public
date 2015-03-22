@@ -35,7 +35,8 @@ Test swinging arm
 	var knee2		= new Vector3();
 	var ankle2		= new Vector3();
 	var foot2 		= new Vector3();
-	var head		= new Pentagon(0, .3, .1);
+	var ball        = new Pentagon(0, .3, .065);
+	ball.setFill('gold');
 
 	//var fingertips 	= new Vector3();
 
@@ -45,13 +46,16 @@ Test swinging arm
 	var m3 = new Matrix();
 	var m4 = new Matrix();
 	var m5 = new Matrix();
+	var h1 = new Matrix();
 
 	var n = 0;
+	var ballmult = 1;
 
     canvas.update = function(g) {
 
 			this.g = g;
 			n = n+1;
+
 
 			var theta = 5 * time;
 
@@ -69,6 +73,7 @@ Test swinging arm
 
 			g.lineWidth = 3;
 
+			h1.identity();
 			m0.identity();
 			m1.identity();
 			m2.identity();
@@ -80,8 +85,17 @@ Test swinging arm
 
 			//the torso is slightly below the neck
 			var jump = Math.cos(theta) * 0.1;
+			var bally = ball.getVertex(0).y;
+
+			if (bally >= 0.8)	ballmult = -1;
+			if (bally <= 0.48)   ballmult = 1;
+
+			var ballr = 0.005 * ballmult;
+
+			h1.translate(0, ballr, 0);
 			
-			m0.translate(0, jump, 0)
+			m0.translate(0, jump, 0);
+			ball.transform(h1, true);
 			m0.rotateZ(Math.cos(theta) * .05);
 			m0.transform(origin, neck);
 
@@ -147,6 +161,7 @@ Test swinging arm
 			m5.translate(.01, -.03, 0);
 			m5.transform(origin, foot2);
 
+			drawShape(ball, g, this.width, this.height);
 			drawLine(id, neck,   torso);
 			drawLine(id, torso,  elbow1);
 			drawLine(id, elbow1, wrist1);

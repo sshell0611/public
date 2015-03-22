@@ -307,6 +307,119 @@ Square.prototype = {
 }
 
 
+//Cube:
+function Cube(center, sz) {
+ this.vertices = [];
+ this.edges    = []; 
+ this.nEdges   = 0;
+ this.nVertex  = 0;
+ this.size	   = 0;
+ this.center   = new Vector3();
+ this.border   = 'black';
+ this.fill	   = 'white';
+ this.init(center,sz);
+}
+
+Cube.prototype = {
+		init: function(center, sz) {
+		       	if (center.x  == undefined) throw "Undefined start x coordinate";
+		       	if (center.y  == undefined) throw "Undefined start y coordinate";
+		       	if (center.z  == undefined) throw "Undefined start z coordinate";
+		       	if (sz == undefined) throw "Undefined size";
+				this.center = center;
+				x = center.x;
+				y = center.y;
+				z = center.z;
+				this.nEdges  = 18;//because we are overlapping for drawing
+				this.nVertex = 8;
+				this.size	 = sz;
+				var hsz = sz/2;
+				var vtx0 = new Vector3(x-hsz, y-hsz, z-hsz);
+				var vtx1 = new Vector3(x+hsz, y-hsz, z-hsz);
+				var vtx2 = new Vector3(x-hsz, y+hsz, z-hsz);
+				var vtx3 = new Vector3(x+hsz, y+hsz, z-hsz);
+				var vtx4 = new Vector3(x-hsz+0.02, y-hsz+0.02, z+hsz);
+				var vtx5 = new Vector3(x+hsz+0.02, y-hsz+0.02, z+hsz);
+				var vtx6 = new Vector3(x-hsz+0.02, y+hsz+0.02, z+hsz);
+				var vtx7 = new Vector3(x+hsz+0.02, y+hsz+0.02, z+hsz);
+				this.vertices = [vtx0, vtx1, vtx2, vtx3, vtx4, vtx5, vtx6, vtx7];
+				this.edges    = [[0,1], [1,3], [3,2], [2,0],
+								 [0,4], [4,5], [5,1], [1,5],
+								 [5,7], [7,6], [6,4], [4,6],
+								 [6,2], [2,6], [6,7], [7,5],
+								 [5,7], [7,3]
+								];
+		    },
+
+		numEdges: function() {
+				return this.nEdges;	
+			},
+
+		getVertex: function (v) {
+				if (v > 7)	throw "Invalid vertex, must be from 0 to 7";
+				return this.vertices[v];
+			},
+
+		setVertex: function(v, vertex) {
+				if (v > 7)	throw "Invalid vertex, must be from 0 to 7";
+				this.vertices[v] = vertex;
+			},
+
+		getEdge: function (e) {
+				if (e > 17)	throw "Invalid vertex, must be from 0 to 17";
+				return this.edges[e];
+			},
+
+		setBorder: function(color) {
+				this.border = color;	
+			},
+
+		getBorder: function() {
+				return this.border;	
+			},
+
+		setFill: function(color) {
+				this.fill = color;	
+			},
+
+		getFill: function() {
+				return this.fill;	
+			},
+
+		clone: function() {
+				var cube = new Cube(this.center, this.size);
+				cube.setBorder(this.getBorder());
+				cube.setFill(this.getFill());
+				return cube;
+		    },
+
+		//transform using a matrix 
+		//true/false flag to change the matrix
+		transform: function(M, inplace) {
+				var cube;
+				if (inplace == true)	
+					cube = this;
+				else
+					cube = this.clone();
+
+				//console.log(this.getX());
+
+				for (v = 0; v < this.nVertex; v++)
+				{
+					var newVtx = new Vector3(0, 0, 0);
+					M.transform(cube.getVertex(v), newVtx);
+					cube.setVertex(v, newVtx);
+				}
+
+				//console.log(this.getX());
+
+				return cube;
+			},
+
+}
+
+
+
 //here x/y is the center point, r is the "radius" from the center
 function Pentagon(x,y,r) {
  this.vertices = [];
@@ -521,6 +634,72 @@ Octagon.prototype = {
 /////////////////////////////////////////////////////////////
 //  Parametric Surface
 /////////////////////////////////////////////////////////////
+//
+function Surface() {
+	this.xadj = 2.5;
+	this.yadj = 1.5;
+	this.nu = 60;
+	this.nv = 35;
+	this.vertices = [];
+	this.vertices.length = this.nu * this.nv;
+
+	this.uv2xyz = function(u, v, dst) {
+		var x = Math.sin(2 * Math.PI * u)/this.xadj;
+		var y = (8 * v - 2);
+		var z = Math.cos(2 * Math.PI * u)/this.xadj;
+		//var x = (2 * u - 1)/this.xadj;// * Math.sin(time);
+		//var x = (Math.cos(2 * Math.PI * u)-1)/this.xadj;
+		//var y = (2 * v - 1)/this.yadj ;
+		//var z = Math.cos(2 * Math.PI * u)/this.xadj;
+		//var z = 1;//(2 * Math.PI * u)/this.xadj;
+		var p  = 2;
+		var yp = Math.abs(Math.cos(time)) + 2;
+		var t = Math.pow(Math.pow(x,p) + Math.pow(y,yp) + Math.pow(z,p), 1/p);
+		x = x / t / this.xadj;
+		y = y / t / this.yadj - 0.25;
+	   	z = z / t / this.xadj;	
+		dst.set(x, y, z);
+	}
+
+	this.build = function (elapsed) {
+			var du = 1 / this.nu;
+			var dv = 1 / this.nv;
+			var i = 0;
+			for (var u = 0; u < .999; u += du) {
+				for (var v = 0; v < .999; v += dv) {
+						//square of 4 vertexes
+						var sq = [new Vector3(), new Vector3(), new Vector3(), new Vector3()];
+						this.uv2xyz(u	, v	  , sq[0]);
+						this.uv2xyz(u+du, v	  , sq[1]);
+						this.uv2xyz(u+du, v+dv, sq[2]);
+						this.uv2xyz(u	, v+dv, sq[3]);
+						this.vertices[i] = sq;
+						i += 1;
+				}
+			}
+	}
+
+	this.draw = function(g, w, h) {
+			g.beginPath();
+			for (var idx = 0; idx < this.vertices.length; idx++) {
+
+				var initVtx = this.vertices[idx][0];
+				var px = [];
+				viewPort(initVtx, px, w, h);
+				g.moveTo(px[0], px[1]);
+
+				for (var v = 1; v < 4; v++) {
+					var px = [];		
+					viewPort(this.vertices[idx][v], px, w, h);
+					g.lineTo(px[0], px[1]);
+				}
+			}
+			g.fill();
+			g.stroke();
+	}
+
+}
+
 
 function Cylinder() {
 	this.xadj = 3.5;
@@ -555,6 +734,61 @@ function Cylinder() {
 			}
 	}
 
+	this.draw = function(g, w, h, f) {
+			g.beginPath();
+			for (var idx = 0; idx < this.vertices.length; idx++) {
+
+				var initVtx = this.vertices[idx][0];
+				var px = [];
+				viewPort(initVtx, px, w, h, f);
+				g.moveTo(px[0], px[1]);
+
+				for (var v = 1; v < 4; v++) {
+					var px = [];		
+					viewPort(this.vertices[idx][v], px, w, h, f);
+					g.lineTo(px[0], px[1]);
+				}
+			}
+			g.fill();
+			g.stroke();
+	}
+}
+
+function Birdcage() {
+	this.xadj = 3.5;
+	this.yadj = 2.5;
+	this.nu = 50;
+	this.nv = 3;
+	this.vertices = [];
+	this.vertices.length = this.nu * (this.nv-1);
+
+	this.uv2xyz = function(u, v, dst) {
+		var theta = 2 * Math.PI * u;
+		var phi   = Math.PI * v - Math.PI/2;
+		var x = (Math.cos(phi) * Math.sin(theta)) /this.xadj;
+		var y = Math.sin(phi) / this.yadj;
+		var z = (Math.cos(phi) * Math.cos(theta))/this.xadj;
+		dst.set(x, y, z);
+	}
+
+	this.build = function (elapsed) {
+			var du = 1 / this.nu;
+			var dv = 1 / this.nv;
+			var i = 0;
+			for (var u = 0; u < .999; u += du) {
+				for (var v = dv; v < .999; v += dv) {
+						//square of 4 vertexes
+						var sq = [new Vector3(), new Vector3(), new Vector3(), new Vector3()];
+						this.uv2xyz(u	, v	  , sq[0]);
+						this.uv2xyz(u+du, v	  , sq[1]);
+						this.uv2xyz(u+du, v+dv, sq[2]);
+						this.uv2xyz(u	, v+dv, sq[3]);
+						this.vertices[i] = sq;
+						i += 1;
+				}
+			}
+	}
+
 	this.draw = function(g, w, h) {
 			g.beginPath();
 			for (var idx = 0; idx < this.vertices.length; idx++) {
@@ -575,20 +809,24 @@ function Cylinder() {
 	}
 }
 
-function Sphere() {
+function SuperSphere() {
 	this.xadj = 3.5;
-	this.yadj = 2.5;
-	this.nu = 50;
-	this.nv = 20;
+	this.yadj = 4.5;
+	this.nu = 40;
+	this.nv = 40;
 	this.vertices = [];
 	this.vertices.length = this.nu * this.nv;
 
 	this.uv2xyz = function(u, v, dst) {
 		var theta = 2 * Math.PI * u;
 		var phi   = Math.PI * v - Math.PI/2;
-		var x = (Math.cos(phi) * Math.sin(theta)) /this.xadj;
-		var y = Math.sin(phi) / this.yadj;
-		var z = (Math.cos(phi) * Math.cos(theta))/this.xadj;
+		var x = (Math.cos(phi) * Math.sin(theta));
+		var y = Math.sin(phi);
+		var z = (Math.cos(phi) * Math.cos(theta));
+		var t = Math.pow(Math.pow(x,8) + Math.pow(y,2) + Math.pow(z,8), 1/8);
+		x = x / t / this.xadj;
+		y = y / t / this.yadj;
+	   	z = z / t / this.xadj;	
 		dst.set(x, y, z);
 	}
 
@@ -630,6 +868,7 @@ function Sphere() {
 	}
 }
 
+
 /////////////////////////////////////////////////////////////
 //  Helper functions
 /////////////////////////////////////////////////////////////
@@ -663,7 +902,7 @@ function drawBorder(canvas, color, w, h) {
 function drawShape(shape, canvas, w, h) {
 
 	canvas.strokeStyle = shape.getBorder();
-	canvas.fillStyle = shape.getFill();
+	//canvas.fillStyle = shape.getFill();
 
 	//move to the first vertex
 	canvas.beginPath();
@@ -688,9 +927,11 @@ function drawShape(shape, canvas, w, h) {
 	canvas.stroke();
 }
 
-function viewPort(pt, pix, w, h) {
-	pix[0] = (w / 2) + pt.x * (w / 2);
-	pix[1] = (h / 2) - pt.y * (w / 2);
+function viewPort(pt, pix, w, h, f) {
+	if (f == undefined) f = 1.0;
+	var vtx = pVector(pt, f);
+	pix[0] = (w / 2) + vtx.x * (w / 2);
+	pix[1] = (h / 2) - vtx.y * (w / 2);
 }
 
 function drawLine(id, vec1, vec2) {
@@ -713,6 +954,227 @@ function drawLine(id, vec1, vec2) {
 	g.stroke();
 }
 
+function pVector(vtx, f) { 
+	return vtx;
+	//var x = vtx.x / f;
+	//var y = vtx.y / f;
+	//var z = vtx.z / f;
+	//var x = (vtx.z == 0) ? 0 : (f * vtx.x) / vtx.z;
+	//var y = (vtx.z == 0) ? 0 : (f * vtx.y) / vtx.z;
+	//var z = (vtx.z == 0) ? 0 : (f / vtx.z);
+	//return new Vector3(x, y, z);
+}
+
+//////////////////////////////////////////////////////////////
+//  Noise function
+/////////////////////////////////////////////////////////////
+
+function Noise() {
+   var abs = function(x, dst) {
+         for (var i = 0 ; i < x.length ; i++)
+            dst[i] = Math.abs(x[i]);
+         return dst;
+      };
+   var add = function(x, y, dst) {
+         for (var i = 0 ; i < x.length ; i++)
+            dst[i] = x[i] + y[i];
+         return dst;
+      };
+   var dot = function(x, y) {
+         var z = 0;
+         for (var i = 0 ; i < x.length ; i++)
+            z += x[i] * y[i];
+         return z;
+      };
+   var fade = function(x, dst) {
+         for (var i = 0 ; i < x.length ; i++)
+            dst[i] = x[i]*x[i]*x[i]*(x[i]*(x[i]*6.0-15.0)+10.0);
+         return dst;
+      };
+   var floor = function(x, dst) {
+         for (var i = 0 ; i < x.length ; i++)
+            dst[i] = Math.floor(x[i]);
+         return dst;
+      };
+   var fract = function(x, dst) {
+         for (var i = 0 ; i < x.length ; i++)
+            dst[i] = x[i] - Math.floor(x[i]);
+         return dst;
+      };
+   var gt0 = function(x, dst) {
+         for (var i = 0 ; i < x.length ; i++)
+            dst[i] = x[i] > 0 ? 1 : 0;
+         return dst;
+      };
+   var lt0 = function(x, dst) {
+         for (var i = 0 ; i < x.length ; i++)
+            dst[i] = x[i] < 0 ? 1 : 0;
+         return dst;
+      };
+   var mix = function(x, y, t, dst) {
+         if (! Array.isArray(x))
+            return x + (y - x) * t;
+         for (var i = 0 ; i < x.length ; i++)
+            dst[i] = x[i] + (y[i] - x[i]) * t;
+         return dst;
+      };
+   var mod289 = function(x, dst) {
+         for (var i = 0 ; i < x.length ; i++)
+            dst[i] = x[i] - Math.floor(x[i] * (1.0 / 289.0)) * 289.0;
+         return dst;
+      };
+   var multiply = function(x, y, dst) {
+         for (var i = 0 ; i < x.length ; i++)
+            dst[i] = x[i] * y[i];
+         return dst;
+      };
+   var multiplyScalar = function(x, s) {
+         for (var i = 0 ; i < x.length ; i++)
+            x[i] *= s;
+         return x;
+      };
+   var permute = function(x, dst) {
+         for (var i = 0 ; i < x.length ; i++)
+            tmp0[i] = (x[i] * 34.0 + 1.0) * x[i];
+         mod289(tmp0, dst);
+         return dst;
+      };
+   var scale = function(x, s, dst) {
+         for (var i = 0 ; i < x.length ; i++)
+            dst[i] = x[i] * s;
+         return dst;
+      };
+   var set3 = function(a, b, c, dst) {
+         dst[0] = a;
+         dst[1] = b;
+         dst[2] = c;
+         return dst;
+      }
+   var set4 = function(a, b, c, d, dst) {
+         dst[0] = a;
+         dst[1] = b;
+         dst[2] = c;
+         dst[3] = d;
+         return dst;
+      }
+   var subtract = function(x, y, dst) {
+         for (var i = 0 ; i < x.length ; i++)
+            dst[i] = x[i] - y[i];
+         return dst;
+      };
+   var taylorInvSqrt = function(x, dst) {
+         for (var i = 0 ; i < x.length ; i++)
+            dst[i] = 1.79284291400159 - 0.85373472095314 * x[i];
+         return dst;
+      };
+
+   var HALF4 = [.5,.5,.5,.5];
+   var ONE3  = [1,1,1];
+   var f     = [0,0,0];
+   var f0    = [0,0,0];
+   var f1    = [0,0,0];
+   var g0    = [0,0,0];
+   var g1    = [0,0,0];
+   var g2    = [0,0,0];
+   var g3    = [0,0,0];
+   var g4    = [0,0,0];
+   var g5    = [0,0,0];
+   var g6    = [0,0,0];
+   var g7    = [0,0,0];
+   var gx0   = [0,0,0,0];
+   var gy0   = [0,0,0,0];
+   var gx1   = [0,0,0,0];
+   var gy1   = [0,0,0,0];
+   var gz0   = [0,0,0,0];
+   var gz1   = [0,0,0,0];
+   var i0    = [0,0,0];
+   var i1    = [0,0,0];
+   var ix    = [0,0,0,0];
+   var ixy   = [0,0,0,0];
+   var ixy0  = [0,0,0,0];
+   var ixy1  = [0,0,0,0];
+   var iy    = [0,0,0,0];
+   var iz0   = [0,0,0,0];
+   var iz1   = [0,0,0,0];
+   var norm0 = [0,0,0,0];
+   var norm1 = [0,0,0,0];
+   var nz    = [0,0,0,0];
+   var nz0   = [0,0,0,0];
+   var nz1   = [0,0,0,0];
+   var tmp0  = [0,0,0,0];
+   var tmp1  = [0,0,0,0];
+   var tmp2  = [0,0,0,0];
+   var sz0   = [0,0,0,0];
+   var sz1   = [0,0,0,0];
+   var t3    = [0,0,0];
+
+   this.noise = function(P) {
+         mod289(floor(P, t3), i0);
+         mod289(add(i0, ONE3, t3), i1);
+         fract(P, f0);
+         subtract(f0, ONE3, f1);
+         fade(f0, f);
+   
+         set4(i0[0], i1[0], i0[0], i1[0], ix );
+         set4(i0[1], i0[1], i1[1], i1[1], iy );
+         set4(i0[2], i0[2], i0[2], i0[2], iz0);
+         set4(i1[2], i1[2], i1[2], i1[2], iz1);
+   
+         permute(add(permute(ix, tmp1), iy, tmp2), ixy);
+         permute(add(ixy, iz0, tmp1), ixy0);
+         permute(add(ixy, iz1, tmp1), ixy1);
+   
+         scale(ixy0, 1 / 7, gx0);
+         scale(ixy1, 1 / 7, gx1);
+         subtract(fract(scale(floor(gx0, tmp1), 1 / 7, tmp2), tmp0), HALF4, gy0);
+         subtract(fract(scale(floor(gx1, tmp1), 1 / 7, tmp2), tmp0), HALF4, gy1);
+         fract(gx0, gx0);
+         fract(gx1, gx1);
+         subtract(subtract(HALF4, abs(gx0, tmp1), tmp2), abs(gy0, tmp0), gz0);
+         subtract(subtract(HALF4, abs(gx1, tmp1), tmp2), abs(gy1, tmp0), gz1);
+         gt0(gz0, sz0);
+         gt0(gz1, sz1);
+   
+         subtract(gx0, multiply(sz0, subtract(lt0(gx0, tmp1), HALF4, tmp2), tmp0), gx0);
+         subtract(gy0, multiply(sz0, subtract(lt0(gy0, tmp1), HALF4, tmp2), tmp0), gy0);
+         subtract(gx1, multiply(sz1, subtract(lt0(gx1, tmp1), HALF4, tmp2), tmp0), gx1);
+         subtract(gy1, multiply(sz1, subtract(lt0(gy1, tmp1), HALF4, tmp2), tmp0), gy1);
+   
+         set3(gx0[0],gy0[0],gz0[0], g0);
+         set3(gx0[1],gy0[1],gz0[1], g1);
+         set3(gx0[2],gy0[2],gz0[2], g2);
+         set3(gx0[3],gy0[3],gz0[3], g3);
+         set3(gx1[0],gy1[0],gz1[0], g4);
+         set3(gx1[1],gy1[1],gz1[1], g5);
+         set3(gx1[2],gy1[2],gz1[2], g6);
+         set3(gx1[3],gy1[3],gz1[3], g7);
+   
+         taylorInvSqrt(set4(dot(g0,g0), dot(g1,g1), dot(g2,g2), dot(g3,g3), tmp0), norm0);
+         taylorInvSqrt(set4(dot(g4,g4), dot(g5,g5), dot(g6,g6), dot(g7,g7), tmp0), norm1);
+   
+         multiplyScalar(g0, norm0[0]);
+         multiplyScalar(g1, norm0[1]);
+         multiplyScalar(g2, norm0[2]);
+         multiplyScalar(g3, norm0[3]);
+   
+         multiplyScalar(g4, norm1[0]);
+         multiplyScalar(g5, norm1[1]);
+         multiplyScalar(g6, norm1[2]);
+         multiplyScalar(g7, norm1[3]);
+   
+         mix(set4(g0[0] * f0[0] + g0[1] * f0[1] + g0[2] * f0[2],
+								                g1[0] * f1[0] + g1[1] * f0[1] + g1[2] * f0[2],
+												               g2[0] * f0[0] + g2[1] * f1[1] + g2[2] * f0[2],
+															                  g3[0] * f1[0] + g3[1] * f1[1] + g3[2] * f0[2], tmp1),
+						 
+						           set4(g4[0] * f0[0] + g4[1] * f0[1] + g4[2] * f1[2],
+										                  g5[0] * f1[0] + g5[1] * f0[1] + g5[2] * f1[2],
+														                 g6[0] * f0[0] + g6[1] * f1[1] + g6[2] * f1[2],
+																		                g7[0] * f1[0] + g7[1] * f1[1] + g7[2] * f1[2], tmp2), f[2], nz);
+   
+         return 2.2 * mix(mix(nz[0],nz[2],f[1]), mix(nz[1],nz[3],f[1]), f[0]);
+      };
+};
 
 /////////////////////////////////////////////////////////////
 //  Canvas stuff provided by Prof
@@ -749,3 +1211,5 @@ function tick() {
 
 
 tick();
+
+

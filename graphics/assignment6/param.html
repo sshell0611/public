@@ -19,15 +19,16 @@ Test Parametric surfaces
 	var id     = 'canvas1';
    	var canvas = initCanvas(id);
 
+	var f 			= -0.5;
 	var origin 		= new Vector3(0,0,0);
-	var shoulder 	= new Vector3();
-	var elbow 		= new Vector3();
-	var wrist 		= new Vector3();
-	var fingertips 	= new Vector3();
 	var cylinder	= new Cylinder();
-	var sphere		= new Sphere();
-	cylinder.build();
-	sphere.build();
+	//var sphere		= new Sphere();
+	//var ssphere		= new SuperSphere();
+	//cylinder.build();
+	//sphere.build();
+	//ssphere.build();
+	//var surface = new Surface();
+	var cube = new Cube(origin, 0.5);
 
 	var M = new Matrix();
 	var n = 0;
@@ -49,9 +50,19 @@ Test Parametric surfaces
 			g.fill();
 
 			M.identity();
+			var yrot = 0.25 * Math.cos(Math.PI * time);
+			M.rotateZ(yrot);
 
-			//cylinder.draw(g, this.width, this.height);
-			sphere.draw(g, this.width, this.height);
+			cube.transform(M, true);
+
+			drawShape(cube, g, this.width, this.height);
+
+			//cylinder.build();
+			//cylinder.draw(g, this.width, this.height, f);
+			//ssphere.draw(g, this.width, this.height);
+
+			//surface.build();
+			//surface.draw(g, this.width, this.height);
  	}
 
 

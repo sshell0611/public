@@ -157,6 +157,17 @@ Matrix.prototype = {
 				return this.clone();
 			},
 
+		rotateY_old: function(theta) {
+				var s = Math.sin(theta);
+				var c = Math.cos(theta);
+				this.set(0,0, c);
+				this.set(0,2, s);
+				this.set(2,0,-s);
+				this.set(2,2, c);
+				return this.clone();
+			},
+
+
 		rotateZ: function(theta) {
 				var s = Math.sin(theta);
 				var c = Math.cos(theta);
@@ -168,6 +179,17 @@ Matrix.prototype = {
 				this.multiply(R);
 				return this.clone();
 			},
+
+		rotateZ_old: function(theta) {
+				var s = Math.sin(theta);
+				var c = Math.cos(theta);
+				this.set(0,0, c);
+				this.set(0,1,-s);
+				this.set(1,0, s);
+				this.set(1,1, c);
+				return this.clone();
+			},
+
 
 		scale: function(x, y, z) {
 				var S = new Matrix();
@@ -338,12 +360,13 @@ Cube.prototype = {
 				var vtx1 = new Vector3(x+hsz, y-hsz, z-hsz);
 				var vtx2 = new Vector3(x-hsz, y+hsz, z-hsz);
 				var vtx3 = new Vector3(x+hsz, y+hsz, z-hsz);
-				var vtx4 = new Vector3(x-hsz+0.02, y-hsz+0.02, z+hsz);
-				var vtx5 = new Vector3(x+hsz+0.02, y-hsz+0.02, z+hsz);
-				var vtx6 = new Vector3(x-hsz+0.02, y+hsz+0.02, z+hsz);
-				var vtx7 = new Vector3(x+hsz+0.02, y+hsz+0.02, z+hsz);
+				var vtx4 = new Vector3(x-hsz, y-hsz, z+hsz);
+				var vtx5 = new Vector3(x+hsz, y-hsz, z+hsz);
+				var vtx6 = new Vector3(x-hsz, y+hsz, z+hsz);
+				var vtx7 = new Vector3(x+hsz, y+hsz, z+hsz);
 				this.vertices = [vtx0, vtx1, vtx2, vtx3, vtx4, vtx5, vtx6, vtx7];
-				this.edges    = [[0,1], [1,3], [3,2], [2,0],
+				this.edges    = [ 
+								 [0,1], [1,3], [3,2], [2,0],
 								 [0,4], [4,5], [5,1], [1,5],
 								 [5,7], [7,6], [6,4], [4,6],
 								 [6,2], [2,6], [6,7], [7,5],
@@ -920,6 +943,7 @@ function drawShape(shape, canvas, w, h) {
 		var vtx  = shape.getVertex(edge[1]);
 		var x    = toViewportX(vtx.x, w);
 		var y    = toViewportY(vtx.y, w, h);
+
 		canvas.lineTo(x, y);
 	}
 
@@ -927,12 +951,54 @@ function drawShape(shape, canvas, w, h) {
 	canvas.stroke();
 }
 
+function drawCube(shape, canvas, w, h, f) {
+
+	canvas.strokeStyle = shape.getBorder();
+	//canvas.fillStyle = shape.getFill();
+
+	//move to the first vertex
+	canvas.beginPath();
+
+	var vtx1 = shape.getVertex(0);
+	var pix = [];
+	viewPortPers(vtx1, pix, w, h, f);
+	var x = pix[0];
+	var y = pix[1];
+
+	canvas.moveTo(x, y);
+
+	//loop through all of the edges
+	for (e=0; e < shape.numEdges(); e++)
+	{
+		var edge = shape.getEdge(e);
+		var vtx  = shape.getVertex(edge[1]);
+
+		var pix  = [];
+		viewPortPers(vtx, pix, w, h, f);
+		var x = pix[0];
+		var y = pix[1];
+		canvas.lineTo(x, y);
+	}
+
+	canvas.fill();
+	canvas.stroke();
+}
+
+
 function viewPort(pt, pix, w, h, f) {
 	if (f == undefined) f = 1.0;
 	var vtx = pVector(pt, f);
 	pix[0] = (w / 2) + vtx.x * (w / 2);
 	pix[1] = (h / 2) - vtx.y * (w / 2);
 }
+
+function viewPortPers(pt, pix, w, h, f) {
+	if (f == undefined) f = 1.0;
+	var vtx = persVector(pt, f);
+	pix[0] = (w / 2) + vtx.x * (w / 2);
+	pix[1] = (h / 2) - vtx.y * (w / 2);
+}
+
 
 function drawLine(id, vec1, vec2) {
 
@@ -964,6 +1030,17 @@ function pVector(vtx, f) {
 	//var z = (vtx.z == 0) ? 0 : (f / vtx.z);
 	//return new Vector3(x, y, z);
 }
+
+function persVector(vtx, f) { 
+	var x = vtx.x / f;
+	var y = vtx.y / f;
+	var z = vtx.z / f;
+	var x = (vtx.z == 0) ? 0 : (f * vtx.x) / vtx.z;
+	var y = (vtx.z == 0) ? 0 : (f * vtx.y) / vtx.z;
+	var z = (vtx.z == 0) ? 0 : (f / vtx.z);
+	return new Vector3(x, y, z);
+}
+
 
 //////////////////////////////////////////////////////////////
 //  Noise function

@@ -18,6 +18,7 @@ The result is something that looks a birdcage.
 <td><canvas id=canvas2 width=300 height=200></td>
 <td width=50></td>
 <td valign=top>
+<br>
 This is another parametric surface that is time-varying the power of the y-coordinate of a superquadric.
 This results in an interesting shape that collapses in on itself.  The bottom and top of the container 
 are also alternating pulled higher and lower which results in a stretching effect.
@@ -39,7 +40,10 @@ a connected scene each frame.
 <td width=50></td>
 <td valign=top>
 <br>
-Perspective
+<b>Perspective</b>
+<br>
+This scene shows cubes linked together at successive values of z so that the perspective is farther away at each cube.  
+The result looks like a tower of some kind.  I added movement by rotating around the z-axis.  Click and hold to stop the movement.
 </td>
 </tr>
 
@@ -250,10 +254,46 @@ Perspective
    // Canvas 4 - Rotation around the y-axis
    ////////////////////////////////////////////////////////////////////////
 
+	var f 			= -0.5;
+	var origin 		= new Vector3(0,0,0);
+	var cube 		= [];
+	var M			= new Matrix();
 
-   var canvas = initCanvas('canvas4');
+	var sz = 0.20;
+	for (i = 19; i >= 0; i--) {
+		var center 	= new Vector3(-.25, -.35, (i*sz)-f);
+		cube[i] = new Cube(center, sz);
+	}
+
+      var canvas = initCanvas('canvas4');
 
       canvas.update = function(g) {
+
+			this.g = g;
+
+			g.fillStyle = 'rgb(220,250,255)';
+
+			g.beginPath();
+			g.moveTo(0,0);
+			g.lineTo(this.width, 0);
+			g.lineTo(this.width, this.height);
+			g.lineTo(0, this.height);
+			g.fill();
+
+			var mult = Math.sin(0.5 * Math.PI * time);
+		    var mult2 = Math.cos(Math.PI * time);
+			//var rot = 0.05 * (this.cursor.z ? mult2 : mult);
+			var rot = 0.15 * mult;
+
+			M.identity();
+			M.rotateZ_old(rot);
+
+			for (i = 0; i < 20; ++i)
+			{
+				if (this.cursor.z == 0)
+					cube[i].transform(M, true);
+				drawCube(cube[i], g, this.width, this.height, f);
+			}
 
 			drawBorder(g, 'black', this.width, this.height);
 	  

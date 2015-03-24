@@ -28,7 +28,10 @@ Test Parametric surfaces
 	//sphere.build();
 	//ssphere.build();
 	//var surface = new Surface();
-	var cube = new Cube(origin, 0.5);
+	var center = new Vector3(-.25, -.4, -0.5);
+	var cube = new Cube(center, 0.25);
+
+	var square = new Square(0,0, 0.3);
 
 	var M = new Matrix();
 	var n = 0;
@@ -50,12 +53,12 @@ Test Parametric surfaces
 			g.fill();
 
 			M.identity();
-			var yrot = 0.25 * Math.cos(Math.PI * time);
-			M.rotateZ(yrot);
+			//var yrot = 0.25 * Math.cos(Math.PI * time);
+			//M.rotateZ(yrot);
 
 			cube.transform(M, true);
 
-			drawShape(cube, g, this.width, this.height);
+			drawCube(cube, g, this.width, this.height, f);
 
 			//cylinder.build();
 			//cylinder.draw(g, this.width, this.height, f);

@@ -1061,6 +1061,12 @@ function drawPoint(id, pt) {
 	g.stroke();
 }
 
+function drawPoints(id, points) {
+	
+		for (i = 0; i < points.length; ++i)
+				drawPoint(id, points[i]);
+}
+
 function drawLine(id, vec1, vec2) {
 
 	var canvas = document.getElementById(id);
@@ -1134,6 +1140,74 @@ function hermitePoly(a, b, c, d, t) {
 		var outval = a * Math.pow(t, 3) + b * Math.pow(t, 2) + c * t + d;
 		return outval;
 
+}
+
+function drawCubicSpline(id, points, n, matchDeriv) {
+
+		var len = points.length;
+
+		if (len < 2)
+			throw 'not enough points'
+
+		var H = hermiteMatrix();
+		var canvas = document.getElementById(id);
+		var g = canvas.g;
+
+		var p0 = points[0];
+		var pN = points[len-1];
+		var tension = 1;
+
+		for (k = 1; k < len; k++) { 
+
+			var p_km1 = points[k-1];
+			var p_k   = points[k];
+			var p_kp1 = (k == len-1) ? points[k]: points[k+1];
+
+			//find derivatives here
+			var p1x = (k==1) ? 0 : tension * (p_k.x - p_km1.x);
+			var p1y = (k==1) ? 0 : tension * (p_k.y - p_km1.y);
+			//var p1x =  tension * (p_k.x - p_km1.x);
+			//var p1y =  tension * (p_k.y - p_km1.y);
+			var p2x = (k == len-1) ? 1 : tension * (p_kp1.x - p_k.x);
+			var p2y = (k == len-1) ? 1 : tension * (p_kp1.y - p_k.y);
+
+			if (matchDeriv == true)
+			{
+				if (k > 1)
+				{
+					p2x = p1x;
+					p2y = p2y;
+				}
+			}
+			//console.log(p1x);
+			//console.log(p1y);
+			//console.log(p2x);
+			//console.log(p2y);
+			//if (k == 1)
+			//	throw 'error';
+	
+			//var xvec = new Vector4(p_km1.x, p_k.x, p_km1.z, p_k.z);
+			//var yvec = new Vector4(p_km1.y, p_k.y, p_km1.z, p_k.z);
+			var xvec = new Vector4(p_km1.x, p_k.x, p1x, p2x);
+			var yvec = new Vector4(p_km1.y, p_k.y, p1y, p2y);
+
+			//testing hermite interpolation
+			var ptArr = [];
+			for (i = 1; i <= n; ++i)
+			{
+				var t = i/n;
+				var x_abcd = H.multiplyV4(xvec);
+				var y_abcd = H.multiplyV4(yvec);
+				var xval = hermitePoly(x_abcd.x, x_abcd.y, x_abcd.z, x_abcd.w, t);
+				var yval = hermitePoly(y_abcd.x, y_abcd.y, y_abcd.z, y_abcd.w, t);
+				var pt = new Vector3(xval, yval, 1);
+				ptArr[i-1] = pt;
+
+			}
+
+			drawLines(id, ptArr);
+
+		}
 }
 
 

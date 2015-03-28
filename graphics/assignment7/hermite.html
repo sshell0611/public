@@ -38,15 +38,20 @@
 			g.fill();
 
 
-			var p0 = new Vector3(-.35, .25, 0.5);
-			var p1 = new Vector3(.35, -.25, 0.5);
+			var p0 = new Vector3(-.35, .25, 0);
+			var p1 = new Vector3(0, -.15, 0.25);
+			var p2 = new Vector3(.35, -.25, 1);
 
-			var xvec = new Vector4(p0.x, p1.x, p0.z, p1.z);
+			var points = [p0, p1, p2];
+			var n = 30;
+
+			drawCubicSpline(id, points, n, true);
+
+			/*var xvec = new Vector4(p0.x, p1.x, p0.z, p1.z);
 			var yvec = new Vector4(p0.y, p1.y, p0.z, p1.z);
 			var H = hermiteMatrix();
 
 			//testing hermite interpolation
-			var n = 50;
 			var ptArr = [];
 			for (i = 1; i <= n; ++i)
 			{
@@ -58,20 +63,12 @@
 				var pt = new Vector3(xval, yval, 1);
 				ptArr[i-1] = pt;
 
-				console.log(i);
-				console.log(xval);
-				console.log(yval);
-				console.log("-------");
-
 			}
 
-			drawLines(id, ptArr);
+			drawLines(id, ptArr);*/
 
 			g.lineWidth = 6;
-			drawPoint(id, p0);
-			drawPoint(id, p1);
-
-			throw 'error'
+			drawPoints(id, points);
  	}
 
 

@@ -1,0 +1,79 @@
+
+<h2>Assignment 7</h2>
+<p><hr>&nbsp;<p>
+
+<table>
+<tr>
+<td><canvas id=canvas1 width=300 height=300></td>
+<td width=50></td>
+<td valign=top>
+<br>
+</td>
+</tr>
+
+
+<script src=drawlib1.js></script>
+<script>
+
+	var id     = 'canvas1';
+   	var canvas = initCanvas(id);
+
+	var origin 		= new Vector3(0,0,0);
+
+
+    canvas.update = function(g) {
+
+			this.g = g;
+
+			g.lineCap  = "round";
+			g.lineJoin = "round";
+
+			g.fillStyle = 'rgb(220,250,255)';
+
+			g.beginPath();
+			g.moveTo(0,0);
+			g.lineTo(this.width, 0);
+			g.lineTo(this.width, this.height);
+			g.lineTo(0, this.height);
+			g.fill();
+
+
+			var p0 = new Vector3(-.35, .25, 0.5);
+			var p1 = new Vector3(.35, -.25, 0.5);
+
+			var xvec = new Vector4(p0.x, p1.x, p0.z, p1.z);
+			var yvec = new Vector4(p0.y, p1.y, p0.z, p1.z);
+			var H = hermiteMatrix();
+
+			//testing hermite interpolation
+			var n = 50;
+			var ptArr = [];
+			for (i = 1; i <= n; ++i)
+			{
+				t = i/n;
+				var x_abcd = H.multiplyV4(xvec);
+				var y_abcd = H.multiplyV4(yvec);
+				var xval = hermitePoly(x_abcd.x, x_abcd.y, x_abcd.z, x_abcd.w, t);
+				var yval = hermitePoly(y_abcd.x, y_abcd.y, y_abcd.z, y_abcd.w, t);
+				var pt = new Vector3(xval, yval, 1);
+				ptArr[i-1] = pt;
+
+				console.log(i);
+				console.log(xval);
+				console.log(yval);
+				console.log("-------");
+
+			}
+
+			drawLines(id, ptArr);
+
+			g.lineWidth = 6;
+			drawPoint(id, p0);
+			drawPoint(id, p1);
+
+			throw 'error'
+ 	}
+
+
+</script>
+

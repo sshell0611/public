@@ -1077,10 +1077,16 @@ function drawPoint(id, pt) {
 	g.stroke();
 }
 
-function drawPoints(id, points) {
+function drawPoints(id, points, selIdx) {
 	
-		for (i = 0; i < points.length; ++i)
-				drawPoint(id, points[i]);
+	var canvas = document.getElementById(id);
+	var g = canvas.g;
+
+	for (i = 0; i < points.length; ++i)
+	{
+		g.strokeStyle = (i == selIdx) ? 'red' : 'black';
+		drawPoint(id, points[i]);
+	}
 }
 
 function drawLine(id, vec1, vec2) {
@@ -1195,13 +1201,7 @@ function drawCubicSpline(id, points, n, matchDeriv) {
 					p2y = p2y;
 				}
 			}
-			//console.log(p1x);
-			//console.log(p1y);
-			//console.log(p2x);
-			//console.log(p2y);
-			//if (k == 1)
-			//	throw 'error';
-	
+
 			//var xvec = new Vector4(p_km1.x, p_k.x, p_km1.z, p_k.z);
 			//var yvec = new Vector4(p_km1.y, p_k.y, p_km1.z, p_k.z);
 			var xvec = new Vector4(p_km1.x, p_k.x, p1x, p2x);
@@ -1209,7 +1209,7 @@ function drawCubicSpline(id, points, n, matchDeriv) {
 
 			//testing hermite interpolation
 			var ptArr = [];
-			for (i = 1; i <= n; ++i)
+			for (i = 0; i <= n; ++i)
 			{
 				var t = i/n;
 				var x_abcd = H.multiplyV4(xvec);
@@ -1244,6 +1244,7 @@ function initCanvas(id) {
 	   canvas.onmousedown = function(e) { this.setCursor(e.clientX, e.clientY, 1); }
 	   canvas.onmousemove = function(e) { this.setCursor(e.clientX, e.clientY   ); }
 	   canvas.onmouseup   = function(e) { this.setCursor(e.clientX, e.clientY, 0); }
+	   canvas.oncontextmenu = function(e) { e.preventDefault(); }
 	   canvases.push(canvas);
 	   return canvas;
 }

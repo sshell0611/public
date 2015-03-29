@@ -4,10 +4,26 @@
 
 <table>
 <tr>
-<td><canvas id=canvas1 width=300 height=300></td>
+<td><canvas id=canvas1 width=500 height=500></td>
 <td width=50></td>
 <td valign=top>
 <br>
+<b>Curve Editor</b>
+<br><br>
+Using the Hermite spline technique.
+<br>
+<ul>
+		<li>Click anywhere in the canvas to add a point.</li>
+		<li>Right-click on a point to remove the point.</li>
+		<li>Drag a point anywhere on canvas to adjust the curve.</li>
+		<li>Match derivatives between splines:
+<form action="hermite.html">
+<input type="radio" name="deriv" value="1" checked>Yes
+<br>
+<input type="radio" name="deriv" value="0">No
+</form> 
+</ul>
+</form>
 </td>
 </tr>
 
@@ -25,15 +41,26 @@
 	var origin = new Vector3(0,0,0);
 	var points = []; 
 	var isDragging = false;
+	var dragPtIdx = -1;
+	var steps = 50;
+
+	//var p0 = new Vector3(-.35, .25, 0);
+	//var p1 = new Vector3(0, .45, 0.25);
+	//var p2 = new Vector3(.35, -.25, 1);
+	points[0] = new Vector3(-.35, .25, 0);
+	points[1] = new Vector3(0, .45, 0.25); 
+	points[2] = new Vector3(.35, -.25, 1);;
 
     canvas.update = function(g) {
 
 			this.g = g;
+			var deriv = document.getElementsByName('deriv');
+			var match = deriv[0].checked;
 
 			g.lineCap  = "round";
 			g.lineJoin = "round";
 
-			g.fillStyle = 'rgb(220,250,255)';
+			g.fillStyle = 'white';//'rgb(220,250,255)';
 
 			g.beginPath();
 			g.moveTo(0,0);
@@ -42,74 +69,86 @@
 			g.lineTo(0, this.height);
 			g.fill();
 
+			//drawCubicSpline(id, points, steps, true);
 
-			var p0 = new Vector3(-.35, .25, 0);
-			var p1 = new Vector3(0, .45, 0.25);
-			var p2 = new Vector3(.35, -.25, 1);
-
-			points[0] = p0;
-			points[1] = p1; 
-			points[2] = p2;
-			var n = 30;
-
-			drawCubicSpline(id, points, n, true);
-
-			/*var xvec = new Vector4(p0.x, p1.x, p0.z, p1.z);
-			var yvec = new Vector4(p0.y, p1.y, p0.z, p1.z);
-			var H = hermiteMatrix();
-
-			//testing hermite interpolation
-			var ptArr = [];
-			for (i = 1; i <= n; ++i)
+			//g.fillStyle = 'blue';
+			g.strokeStyle = 'blue';
+			if (points.length > 1)
 			{
-				t = i/n;
-				var x_abcd = H.multiplyV4(xvec);
-				var y_abcd = H.multiplyV4(yvec);
-				var xval = hermitePoly(x_abcd.x, x_abcd.y, x_abcd.z, x_abcd.w, t);
-				var yval = hermitePoly(y_abcd.x, y_abcd.y, y_abcd.z, y_abcd.w, t);
-				var pt = new Vector3(xval, yval, 1);
-				ptArr[i-1] = pt;
-
+				drawCubicSpline(id, points, steps, match);
 			}
 
-			drawLines(id, ptArr);*/
-
 			g.lineWidth = 7.5;
-			drawPoints(id, points);
+			g.strokeStyle = 'black';
+			drawPoints(id, points, dragPtIdx);
+
+			drawBorder(g, 'black', this.width, this.height);
+
  	}
 
 	////////////////////////////////////////////////////////////////
 	// Helper functions for dragging the curve
 	////////////////////////////////////////////////////////////////
 
-	function DragStart(e) {
-		//var loc = windowToCanvas(canvas, e.clientX, e.clientY);
-		var loc = viewToPoint(canvas, e.clientX, e.clientY);
-		//console.log('DragStart'); 
-		console.log(loc.x);
-		console.log(loc.y);
-		//if (button == 3) { e.preventDefault(); }
-		var button = e.which;
+	function AddNewPoint(ptLoc) {
+		var idx = points.length;
+		points[idx] = new Vector3(ptLoc.x, ptLoc.y, 1);
+	}
 
+	function RemovePoint(index) {
+		if (index >=0 && index < points.length)
+		{
+			points.splice(index, 1); 
+		}
+	}
+
+	function DragStart(e) {
+		var loc = viewToPoint(canvas, e.clientX, e.clientY);
+		var button = e.which;
 		for (i = 0; i < points.length; i++) 
 		{
-			console.log(points[i].x);
-			console.log(points[i].y);
 			if (HitTest(points[i], loc.x, loc.y)) 
 			{
-				console.log('hit a point, starting to drag');
-				isDragging = true;	
+				//if it is a right click, remove the point, else drag it
+				if (button == 1) 
+				{
+					isDragging = true;	
+					dragPtIdx  = i;
+					return;
+				}
+				else if (button == 3)
+				{
+					RemovePoint(i);
+					return;
+				}
 			}
 		}
+
+		if (!isDragging && button == 1) { AddNewPoint(loc); }
 
 	};
 
 	function Dragging(e) {
-		//console.log('Dragging'); 
+
+		if (isDragging && dragPtIdx !== -1)
+		{
+			var mouse = windowToCanvas(canvas, e.clientX, e.clientY);
+			var loc   = viewToPoint(canvas, e.clientX, e.clientY);
+
+			var pt = points[dragPtIdx];
+
+			pt.x = loc.x;
+			pt.y = loc.y;
+		}
 	};
 
 	function DragEnd(e) {
-		console.log('DragEnd'); 
+
+		if (isDragging) 
+		{
+			isDragging = false;
+			dragPtIdx = -1;	
+		}
 	};
 
 	function HitTest(testPt, mouseX, mouseY) {
@@ -117,12 +156,9 @@
 		var dx = mouseX - testPt.x;
 		var dy = mouseY - testPt.y;
 
-		var rad = 0.01;	
+		var rad = 0.05;	
 
 		var dist = dx*dx + dy*dy;
-
-		console.log('distance');
-		console.log(dist);
 
 		return (dist < rad*rad);
 	};

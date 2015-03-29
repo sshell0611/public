@@ -1020,6 +1020,22 @@ function viewPortVec(pt, pix, w, h, f) {
 	pix.z = 1;
 }
 
+function windowToCanvas(canvas, x, y) {
+	var bbox = canvas.getBoundingClientRect();
+	return { x: x - bbox.left * (canvas.width  / bbox.width),
+			 y: y - bbox.top  * (canvas.height / bbox.height)
+		   };
+}
+
+function viewToPoint(canvas, x, y) {
+	var pix = windowToCanvas(canvas, x, y);
+	var w = canvas.width;
+	var h = canvas.height;
+	return { x : ((2 * pix.x) / w) - 1, 
+			 y : (h/w) - ((2 * pix.y) / w)
+			};
+}
+
 function drawLines(id, pts) {
 
 	var canvas = document.getElementById(id);

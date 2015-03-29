@@ -18,8 +18,13 @@
 	var id     = 'canvas1';
    	var canvas = initCanvas(id);
 
-	var origin 		= new Vector3(0,0,0);
+	canvas.addEventListener('mousedown', DragStart);
+	canvas.addEventListener('mousemove', Dragging);
+	canvas.addEventListener('mouseup', DragEnd);
 
+	var origin = new Vector3(0,0,0);
+	var points = []; 
+	var isDragging = false;
 
     canvas.update = function(g) {
 
@@ -39,10 +44,12 @@
 
 
 			var p0 = new Vector3(-.35, .25, 0);
-			var p1 = new Vector3(0, -.15, 0.25);
+			var p1 = new Vector3(0, .45, 0.25);
 			var p2 = new Vector3(.35, -.25, 1);
 
-			var points = [p0, p1, p2];
+			points[0] = p0;
+			points[1] = p1; 
+			points[2] = p2;
 			var n = 30;
 
 			drawCubicSpline(id, points, n, true);
@@ -67,9 +74,58 @@
 
 			drawLines(id, ptArr);*/
 
-			g.lineWidth = 6;
+			g.lineWidth = 7.5;
 			drawPoints(id, points);
  	}
+
+	////////////////////////////////////////////////////////////////
+	// Helper functions for dragging the curve
+	////////////////////////////////////////////////////////////////
+
+	function DragStart(e) {
+		//var loc = windowToCanvas(canvas, e.clientX, e.clientY);
+		var loc = viewToPoint(canvas, e.clientX, e.clientY);
+		//console.log('DragStart'); 
+		console.log(loc.x);
+		console.log(loc.y);
+		//if (button == 3) { e.preventDefault(); }
+		var button = e.which;
+
+		for (i = 0; i < points.length; i++) 
+		{
+			console.log(points[i].x);
+			console.log(points[i].y);
+			if (HitTest(points[i], loc.x, loc.y)) 
+			{
+				console.log('hit a point, starting to drag');
+				isDragging = true;	
+			}
+		}
+
+	};
+
+	function Dragging(e) {
+		//console.log('Dragging'); 
+	};
+
+	function DragEnd(e) {
+		console.log('DragEnd'); 
+	};
+
+	function HitTest(testPt, mouseX, mouseY) {
+
+		var dx = mouseX - testPt.x;
+		var dy = mouseY - testPt.y;
+
+		var rad = 0.01;	
+
+		var dist = dx*dx + dy*dy;
+
+		console.log('distance');
+		console.log(dist);
+
+		return (dist < rad*rad);
+	};
 
 
 </script>

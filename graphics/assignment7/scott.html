@@ -1,0 +1,87 @@
+
+<h2>Assignment 7</h2>
+<p><hr>&nbsp;<p>
+
+<table>
+<tr>
+<td><canvas id=canvas1 width=700 height=500></td>
+<td width=50></td>
+<td valign=top>
+</td>
+</tr>
+
+
+<script src=drawlib1.js></script>
+<script>
+
+	var id     = 'canvas1';
+   	var canvas = initCanvas(id);
+
+	//canvas.addEventListener('mousedown', DragStart);
+	//canvas.addEventListener('mousemove', Dragging);
+	//canvas.addEventListener('mouseup', DragEnd);
+
+	var origin = new Vector3(0,0,0);
+	var points = []; 
+	var isDragging = false;
+	var dragPtIdx = -1;
+	var steps = 50;
+
+	var curves = [];
+	points[0] = new Vector3(-.72, .45, 0.25);
+	points[1] = new Vector3(-.57, .55, -0.25); 
+	points[2] = new Vector3(-.25, .45, 0.25);
+	curves[0] = points;
+
+    canvas.update = function(g) {
+
+			this.g = g;
+			var match = true;
+
+			var spline = new Spline(points, steps, match);
+
+			g.lineCap  = "round";
+			g.lineJoin = "round";
+
+			g.fillStyle = 'white';//'rgb(220,250,255)';
+
+			g.beginPath();
+			g.moveTo(0,0);
+			g.lineTo(this.width, 0);
+			g.lineTo(this.width, this.height);
+			g.lineTo(0, this.height);
+			g.fill();
+
+			//drawCubicSpline(id, points, steps, true);
+
+			//g.fillStyle = 'blue';
+			g.strokeStyle = 'blue';
+			if (points.length > 1)
+			{
+				spline.draw(id);
+				//drawCubicSpline(id, points, steps, match);
+			}
+
+			var t = time;
+			var pt = spline.getPoint(t*5);
+			//console.log(pt.x);
+			//console.log(pt.y);
+			//console.log('---------------');
+
+			/*for (c = 0; c < curves.count; c++)
+			{
+			}*/
+
+			g.lineWidth = 7.5;
+			g.strokeStyle = 'black';
+			drawPoints(id, [pt], 0);
+
+			drawBorder(g, 'black', this.width, this.height);
+
+ 	}
+
+
+
+
+</script>
+

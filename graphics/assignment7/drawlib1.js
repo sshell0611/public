@@ -238,6 +238,93 @@ Matrix.prototype = {
 }
 
 /////////////////////////////////////////////////////////////
+// Spline class 
+/////////////////////////////////////////////////////////////
+
+function Spline(ctrlPoints, steps, match) {
+	this.points = [];
+	this.steps  = 10;
+	this.matchDeriv = true;
+	this.init(ctrlPoints, steps, match);
+}
+
+Spline.prototype = {
+
+		init: function(ctrlPoints, steps, match) {
+			this.steps = steps;
+			this.matchDeriv = match;	
+			this.build(ctrlPoints);
+		},
+
+		build: function(ctrlPoints) {
+
+			this.points = [];
+			var len = ctrlPoints.length;
+
+			if (len < 2)
+				throw 'not enough points'
+
+			var H = hermiteMatrix();
+			var tension = 1;
+
+			var p = 0;
+			for (k = 1; k < len; k++) { 
+
+				var p_km1 = ctrlPoints[k-1];
+				var p_k   = ctrlPoints[k];
+				var p_kp1 = (k == len-1) ? ctrlPoints[k]: ctrlPoints[k+1];
+
+				//find derivatives here
+				var p1x = (k==1) ? 0 : tension * (p_k.x - p_km1.x);
+				var p1y = (k==1) ? 0 : tension * (p_k.y - p_km1.y);
+				//var p1x =  tension * (p_k.x - p_km1.x);
+				//var p1y =  tension * (p_k.y - p_km1.y);
+				var p2x = (k == len-1) ? 1 : tension * (p_kp1.x - p_k.x);
+				var p2y = (k == len-1) ? 1 : tension * (p_kp1.y - p_k.y);
+
+				if (this.matchDeriv == true)
+				{
+					if (k > 1)
+					{
+						p2x = p1x;
+						p2y = p2y;
+					}
+				}
+
+				//var xvec = new Vector4(p_km1.x, p_k.x, p_km1.z, p_k.z);
+				//var yvec = new Vector4(p_km1.y, p_k.y, p_km1.z, p_k.z);
+				var xvec = new Vector4(p_km1.x, p_k.x, p1x, p2x);
+				var yvec = new Vector4(p_km1.y, p_k.y, p1y, p2y);
+
+				//testing hermite interpolation
+				for (i = 0; i <= this.steps; ++i)
+				{
+					var t = i/this.steps;
+					var x_abcd = H.multiplyV4(xvec);
+					var y_abcd = H.multiplyV4(yvec);
+					var xval = hermitePoly(x_abcd.x, x_abcd.y, x_abcd.z, x_abcd.w, t);
+					var yval = hermitePoly(y_abcd.x, y_abcd.y, y_abcd.z, y_abcd.w, t);
+					var pt = new Vector3(xval, yval, 1);
+					this.points[p] = pt;
+					p = p+1;
+				}	
+			}
+		
+		},
+
+		draw: function(id) {
+
+			drawLines(id, this.points);
+		},
+
+		getPoint: function(i) {
+		
+			idx = Math.floor(i % this.points.length);
+			return this.points[idx];
+		},
+}
+
+/////////////////////////////////////////////////////////////
 //  Shape Definitions
 /////////////////////////////////////////////////////////////
 

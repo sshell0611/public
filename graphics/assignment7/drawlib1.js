@@ -14,6 +14,12 @@ Vector3.prototype = {
 		          if (y !== undefined) this.y = y;
 		          if (z !== undefined) this.z = z;
 		       },
+
+		 minus : function(v) {
+
+				 return new Vector3(this.x-v.x, this.y-v.y, this.z-v.z);
+		 
+		 		},
 }
 
 function Vector4(x, y, z, w) {
@@ -142,6 +148,16 @@ Matrix.prototype = {
 				T.set(0,3,x);
 				T.set(1,3,y);
 				T.set(2,3,z);
+				this.multiply(T);
+				return this.clone();
+			},
+
+		translate: function(v) {
+				var T = new Matrix();
+				T.identity();
+				T.set(0,3,v.x);
+				T.set(1,3,v.y);
+				T.set(2,3,v.z);
 				this.multiply(T);
 				return this.clone();
 			},
@@ -314,7 +330,7 @@ Spline.prototype = {
 
 		draw: function(id) {
 
-			drawLines(id, this.points);
+			drawLines(id, this.points, 1);
 		},
 
 		getPoint: function(i) {
@@ -877,19 +893,20 @@ function Cylinder() {
 	}
 }
 
-function Birdcage() {
-	this.xadj = 3.5;
-	this.yadj = 2.5;
+function Sphere() {
+	this.xadj = 5.5;
+	this.yadj = 5.5;
 	this.nu = 50;
-	this.nv = 3;
+	this.nv = 50;
 	this.vertices = [];
 	this.vertices.length = this.nu * (this.nv-1);
 
 	this.uv2xyz = function(u, v, dst) {
+		var angle = 2 * time;
 		var theta = 2 * Math.PI * u;
 		var phi   = Math.PI * v - Math.PI/2;
-		var x = (Math.cos(phi) * Math.sin(theta)) /this.xadj;
-		var y = Math.sin(phi) / this.yadj;
+		var x = (Math.cos(phi) * Math.sin(theta)) /this.xadj + Math.cos(angle) * 0.05;
+		var y = Math.sin(phi) / this.yadj + 0.17;
 		var z = (Math.cos(phi) * Math.cos(theta))/this.xadj;
 		dst.set(x, y, z);
 	}
@@ -1036,6 +1053,9 @@ function drawShape(shape, canvas, w, h) {
 
 	canvas.moveTo(x, y);
 
+	//console.log(x); 
+	//console.log(y);
+
 	//loop through all of the edges
 	for (e=0; e < shape.numEdges(); e++)
 	{
@@ -1123,7 +1143,7 @@ function viewToPoint(canvas, x, y) {
 			};
 }
 
-function drawLines(id, pts) {
+function drawLines(id, pts, oridelw) {
 
 	var canvas = document.getElementById(id);
 	var g = canvas.g;
@@ -1131,6 +1151,7 @@ function drawLines(id, pts) {
 	var lw = g.lw;
 
 	g.lineWidth = 2;
+	if (oridelw !== undefined) g.lineWidth = oridelw;
 
 	g.beginPath();
 

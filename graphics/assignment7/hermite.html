@@ -329,6 +329,8 @@ The curve with the Pentagon following its path is actually controlled by the cur
 	}
 
 	function RemovePoint(index) {
+		if (points.length <=2)
+			return;
 		if (index >=0 && index < points.length)
 		{
 			points.splice(index, 1); 

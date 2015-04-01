@@ -152,6 +152,17 @@ Matrix.prototype = {
 				return this.clone();
 			},
 
+		translate_orig: function(x, y, z) {
+				var T = new Matrix();
+				T.identity();
+				T.set(0,3,x);
+				T.set(1,3,y);
+				T.set(2,3,z);
+				this.multiply(T);
+				return this.clone();
+			},
+
+
 		translate: function(v) {
 				var T = new Matrix();
 				T.identity();

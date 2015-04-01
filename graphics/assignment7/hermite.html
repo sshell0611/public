@@ -4,7 +4,7 @@
 
 <table>
 <tr>
-<td><canvas id=canvas1 width=500 height=500></td>
+<td><canvas id=canvas1 width=700 height=500></td>
 <td width=50></td>
 <td valign=top>
 <br>
@@ -26,7 +26,19 @@ Using the Hermite spline technique.
 </form>
 </td>
 </tr>
-
+<tr>
+<td><canvas id=canvas2 width=700 height=500></td>
+<td width=50></td>
+<td valign=top>
+<br>
+<b>Spline and Shape Movements</b>
+<br>
+<br>
+A hodgepodge of spline and shape movements...
+<br>
+The curve with the Pentagon following its path is actually controlled by the curve you build up top.
+</td>
+</tr>
 
 <script src=drawlib1.js></script>
 <script>
@@ -85,6 +97,227 @@ Using the Hermite spline technique.
 			drawBorder(g, 'black', this.width, this.height);
 
  	}
+
+   ////////////////////////////////////////////////////////////////////////
+   // Canvas 2
+   ////////////////////////////////////////////////////////////////////////
+
+   var id2     = 'canvas2';
+   var canvas2 = initCanvas(id2);
+
+	var origin = new Vector3(0,0,0);
+	var points = []; 
+	var isDragging = false;
+	var dragPtIdx = -1;
+	var steps = 50;
+
+	var curves = [];
+	points[0] = new Vector3(-.72, .45, 0.25);
+	points[1] = new Vector3(-.57, .55, -0.25); 
+	points[2] = new Vector3(-.25, .45, 0.25);
+
+	var pent = new Pentagon(points[0].x, points[0].y, 0.05);
+	pent.setFill('orange');
+
+	var bc = new Sphere();
+
+	var sM = new Matrix();
+	var sM2 = new Matrix();
+	var lastPt = points[0];
+	var m0 = new Matrix();
+	var m1 = new Matrix();
+	var m2 = new Matrix();
+	var m3 = new Matrix();
+	var m4 = new Matrix();
+	var m5 = new Matrix();
+
+	var origin 		= new Vector3(.65,.20,0);
+	var neck 		= new Vector3();
+	var torso		= new Vector3();
+	var waist		= new Vector3();
+	var shoulder1 	= new Vector3();
+	var elbow1 		= new Vector3();
+	var wrist1 		= new Vector3();
+	var shoulder2 	= new Vector3();
+	var elbow2 		= new Vector3();
+	var wrist2 		= new Vector3();
+	var knee1		= new Vector3();
+	var ankle1		= new Vector3();
+	var foot1		= new Vector3();
+	var knee2		= new Vector3();
+	var ankle2		= new Vector3();
+	var foot2 		= new Vector3();
+
+   canvas2.update = function(g) {
+
+		this.g = g;
+
+		var match = true;
+		var theta = 2 * time;
+
+		var points2 = [];
+		points2[0] = new Vector3(0, 0.03, 0.25);
+		points2[1] = new Vector3(Math.cos(theta)*.05, -.05, -0.25);
+		points2[2] = new Vector3(-.025+Math.sin(theta)*.05, -.2, 1);
+		points2[3] = new Vector3(-.025+Math.sin(theta)*.1, -.4+Math.cos(theta)*0.01, 1);
+		points2[4] = new Vector3(0, -.55+Math.cos(theta)*0.01, 1);
+
+		var points3 = [];
+		points3[0] = new Vector3(.40, -.05, 0.25);
+		points3[1] = new Vector3(.50, -.32, 0.25);
+		points3[2] = new Vector3(.75, -.45, -0.25); 
+		points3[3] = new Vector3(.88, -.30, -0.25); 
+		points3[4] = new Vector3(.90, -.05, 0.25);
+
+		sM2.identity();
+		var rot = 0.25 * Math.sin(Math.PI * time);
+		sM2.rotateZ(rot);
+		for (i = 0; i < 5; i++)
+		{
+			var newvec = new Vector3(0,0,0);
+			sM2.transform(points3[i], newvec);
+			points3[i] = newvec;
+		}
+
+		var spline = new Spline(points, steps, match);
+		var spline2 = new Spline(points2, steps, false);
+		var spline3 = new Spline(points3, steps, true);
+
+		g.lineCap  = "round";
+		g.lineJoin = "round";
+
+		g.fillStyle = 'white';//'rgb(220,250,255)';
+
+		g.beginPath();
+		g.moveTo(0,0);
+		g.lineTo(this.width, 0);
+		g.lineTo(this.width, this.height);
+		g.lineTo(0, this.height);
+		g.fill();
+
+		sM.identity();
+
+		g.strokeStyle = 'blue';
+		spline.draw(id2);
+		spline2.draw(id2);
+		g.lineWidth = 4.5;
+		spline3.draw(id2);
+
+		var t = time;
+		var pt = spline.getPoint(t*10);
+		var diff = pt.minus(lastPt);
+
+		sM.translate(diff);		
+		pent.transform(sM, true);
+
+		lastPt = pt;
+
+		drawShape(pent, g, this.width, this.height);
+
+		bc.build();
+		bc.draw(g, this.width, this.height);
+
+		g.lineWidth = 7.5;
+		g.strokeStyle = 'black';
+		//drawPoints(id, points3, 0);
+
+		g.lineWidth = 3;
+
+		//person
+		var theta2 = 5 * time;
+		var jump = Math.cos(theta2) * 0.1;
+		m0.identity();
+		m1.identity();
+		m2.identity();
+		m3.identity();
+		m4.identity();
+		m5.identity();
+
+		m0.translate_orig(0, jump, 0);
+		m0.rotateZ(Math.cos(theta2) * .05);
+		m0.transform(origin, neck);
+
+		m1.translate_orig(0, -.06 + jump, 0);
+		m2.translate_orig(0, -.06 + jump, 0);
+		m3.translate_orig(0, -.06 + jump, 0);
+		m4.translate_orig(0, -.06 + jump, 0);
+		m5.translate_orig(0, -.06 + jump, 0);
+
+		m1.transform(origin, torso);
+
+		m1.rotateZ(Math.cos(theta2) * .25);
+
+		//shoulders & wrists
+		m1.translate_orig(.15, .10, 0);
+		m1.transform(origin, elbow2);
+
+		//m1.rotateZ(Math.sin(theta) * .25 + .25);
+		m1.rotateZ(Math.sin(theta2) * .15);
+
+		m1.translate_orig(0, .07, 0);
+		m1.transform(origin, wrist2);
+
+		m2.rotateZ(-Math.cos(theta2) * .25);
+
+		m2.translate_orig(-.15, .10, 0);
+		m2.transform(origin, elbow1);
+
+		m2.rotateZ(-Math.sin(theta2) * .15);
+
+		m2.translate_orig(0, .07, 0);
+		m2.transform(origin, wrist1);
+
+			//the waist is below the torso
+		m3.translate_orig(0, -.2, 0);
+		m4.translate_orig(0, -.2, 0);
+		m5.translate_orig(0, -.2, 0);
+
+		m3.rotateZ(Math.cos(theta2) * .05);
+		m3.transform(origin, waist);
+
+		//legs
+
+		m4.translate_orig(-.1, -.2, 0);
+		m4.rotateZ(Math.cos(theta2) * .3 - .1);
+
+		m4.transform(origin, knee1);
+
+		m5.translate_orig(.1, -.2, 0);
+		m5.rotateZ(-Math.cos(theta2) * .3 + .1);
+
+		m5.transform(origin, knee2);
+
+		m4.translate_orig(-.02, -.15, 0);
+		m4.transform(origin, ankle1);
+
+		m5.translate_orig(.02, -.15, 0);
+		m5.transform(origin, ankle2);
+
+		m4.translate_orig(-.01, -.03, 0);
+		m4.transform(origin, foot1);
+
+		m5.translate_orig(.01, -.03, 0);
+		m5.transform(origin, foot2);
+
+		drawLine(id2, neck,   torso);
+		drawLine(id2, torso,  elbow1);
+		drawLine(id2, elbow1, wrist1);
+		drawLine(id2, torso,  elbow2);
+		drawLine(id2, elbow2, wrist2);
+		drawLine(id2, torso, waist);
+		drawLine(id2, waist, knee1);
+		drawLine(id2, knee1, ankle1);
+		drawLine(id2, waist, knee2);
+		drawLine(id2, knee2, ankle2);
+		drawLine(id2, ankle1, foot1);
+		drawLine(id2, ankle2, foot2);
+
+
+		g.lineWidth = 7.5;
+		g.strokeStyle = 'black';
+		drawBorder(g, 'black', this.width, this.height);
+	}
+
 
 	////////////////////////////////////////////////////////////////
 	// Helper functions for dragging the curve

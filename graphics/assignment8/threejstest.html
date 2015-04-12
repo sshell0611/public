@@ -1,0 +1,77 @@
+<script src="js/three.js"></script>
+<body>
+
+<table>
+<tr>
+<td id="scene1"></td>
+</tr>
+</table>
+
+<script>
+
+	///////////////////////////////////////////////////////////////////////
+	// Support code - provided by professor
+	///////////////////////////////////////////////////////////////////////
+	window.time = 0;
+	window.SimpleScene = function() {
+	this.init = function(name) {
+		this.scene = new THREE.Scene();
+	 
+		// CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
+	 
+		var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+		camera.position.z = 5;
+		this.scene.add(camera);
+	 
+		// CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
+	 
+		var renderer = new THREE.WebGLRenderer( { alpha: true } );
+		renderer.setSize(400, 400);
+		var canvas = document.getElementById(name);
+		canvas.appendChild(renderer.domElement);
+	 
+		// CALL THE USER'S SETUP FUNCTION JUST ONCE.
+	 
+		this.setup();
+	 
+		// START THE ANIMATION LOOP.
+	 
+		var that = this;
+		(function tick() {
+			time = (new Date().getTime()) / 1000;
+			that.update();
+			renderer.render(that.scene, camera);
+			requestAnimationFrame(tick);
+			})();
+		}
+	};
+	///////////////////////////////////////////////////////////////////////
+	// End support code
+	///////////////////////////////////////////////////////////////////////
+
+	
+	function Scene1() {
+	
+		var box;
+
+		this.setup = function() {
+			var geometry = new THREE.BoxGeometry(2, 2, 2);
+			var material = new THREE.MeshNormalMaterial();
+			box = new THREE.Mesh(geometry, material);
+			this.scene.add(box);
+		}
+
+		this.update = function() {
+
+			box.rotation.x += 0.01;
+			box.rotation.y += 0.02;
+		
+		}
+	}
+
+	Scene1.prototype = new SimpleScene;
+	new Scene1().init('scene1');
+
+
+</script>
+</body>

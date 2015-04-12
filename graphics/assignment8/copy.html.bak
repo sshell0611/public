@@ -1,0 +1,124 @@
+<script src=js/three.js></script>
+<body>
+
+<hr color=white size=75>
+
+<table>
+<tr>
+<td width=75></td>
+<td>
+<font face=helvetica>
+
+<div id='SimpleScene_code'>
+		window.time = 0;
+		window.SimpleScene = function() {
+				this.init = function(name) {
+				this.scene = new THREE.Scene();
+
+				// CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
+
+				var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+				camera.position.z = 5;
+				this.scene.add(camera);
+
+				// CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
+
+				var renderer = new THREE.WebGLRenderer( { alpha: true } );
+				renderer.setSize(400, 400);
+				document.getElementById(name).appendChild(renderer.domElement);
+
+				// CALL THE USER'S SETUP FUNCTION JUST ONCE.
+
+				this.setup();
+
+				// START THE ANIMATION LOOP.
+
+				var that = this;
+				(function tick() {
+				time = (new Date().getTime()) / 1000;
+				that.update();
+				renderer.render(that.scene, camera);
+				requestAnimationFrame(tick);
+				})();
+			}
+		};
+</div>
+
+<script>
+	function evalElement(name) {
+	eval(document.getElementById(name).innerHTML.replace(/<pre>/,'').replace(/<.pre>/,''));
+}
+</script>
+
+<script>evalElement('SimpleScene_code');</script>
+
+</FONT>
+</TD>
+</TR>
+</TABLE>
+
+
+<p>&nbsp;<p><hr>&nbsp;<p>
+
+
+<TABLE>
+<TR>
+<TD width=80%>
+<FONT face=helvetica>
+
+<p><b>A very simple example</b><p>
+
+<blockquote>
+
+Given the above support,
+the code shown in the left column of the below 2&#215;1 table, when placed within a <code>&lt;script&gt;</code>
+tag
+and a
+<code>&lt;/script&gt;</code>
+tag,
+produces the simple animated scene shown in the right column of the table.
+<p>
+The HTML code I used for the right column of the below table is:
+<code>&lt;td id='Scene1_id'>&lt;/td></code>
+
+<table>
+<tr>
+<td id=Scene1_code>
+<pre>
+function Scene1() {
+var box;
+
+this.setup = function() {
+var geometry = new THREE.BoxGeometry(2, 2, 2);
+var material = new THREE.MeshNormalMaterial();
+box = new THREE.Mesh(geometry, material);
+this.scene.add(box);
+}
+
+this.update = function() {
+box.rotation.x += 0.01;
+box.rotation.y += 0.02;
+}
+}
+Scene1.prototype = new SimpleScene;
+new Scene1().init('Scene1_id');
+</pre>
+</td>
+<td id='Scene1_id'></td>
+</tr>
+</table>
+<script>evalElement('Scene1_code');</script>
+</blockquote>
+
+</FONT>
+</TD>
+</TR>
+</TABLE>
+
+
+<hr color=white size=1000>
+</font>
+</td><td width=75>&nbsp;</td></tr></table>
+</body>
+
+

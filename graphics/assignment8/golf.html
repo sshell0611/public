@@ -10,6 +10,8 @@
 <font face=helvetica>
 
 <script>
+		var clothGeometry;
+		var sphere, arrow;
 		window.time = 0;
 		window.SimpleScene = function() {
 				this.init = function(name) {
@@ -26,6 +28,9 @@
 
 				var renderer = new THREE.WebGLRenderer( { alpha: true } );
 				renderer.setSize(600, 600);
+				renderer.shadowMapEnabled = true;
+				//renderer.gammaInput = true;
+				//renderer.gammaOutput = true;
 				document.getElementById(name).appendChild(renderer.domElement);
 
 				// CALL THE USER'S SETUP FUNCTION JUST ONCE.
@@ -36,14 +41,11 @@
 
 				var that = this;
 				(function tick() {
-				time = (new Date().getTime()) / 1000;
-				that.update();
-				renderer.render(that.scene, camera);
-				renderer.setClearColor(that.scene.fog.color);
-				renderer.shadowMapEnabled = true;
-				//renderer.gammaInput = true;
-				//renderer.gammaOutput = true;
-				requestAnimationFrame(tick);
+					time = (new Date().getTime()) / 1000;
+					that.update();
+					renderer.render(that.scene, camera);
+					renderer.setClearColor(that.scene.fog.color);
+					requestAnimationFrame(tick);
 				})();
 			}
 		};
@@ -68,27 +70,33 @@
 <td id='Scene1_id'></td>
 </tr>
 </table>
+<script src="Cloth.js"></script>
 <script>
 
 		function Scene1() {
 
 		//objects
-		var box, ground, ambLight, light;
+		var box, ground, ambLight, light, pole, flag;
+		var green, forest;
+		var arrow;
 
 		//setup
 		this.setup = function() {
 
+			THREE.ImageUtils.crossOrigin = '';
+
 			//background fog color
-			this.scene.fog = new THREE.Fog(0xcce0ff, 500, 10000);
+			this.scene.fog = new THREE.Fog(0xcce0ff, 3, 10000);
 
 			//light
 			ambLight = new THREE.AmbientLight(0x666666);
 			light = new THREE.DirectionalLight(0xdfebff, 1.75);
-			light.position.set(50, 200, 100);
+			//light.position.set(50, 200, 100);
+			light.position.set(-3, 2, 7);
 			light.position.multiplyScalar(1.3);
 			light.castShadow = true;
-			light.shadowMapWidth  = 1024;
-			light.shadowMapHeight = 1024;
+			//light.shadowMapWidth  = 1024;
+			//light.shadowMapHeight = 1024;
 
 			var d = 300;
 			light.shadowCameraLeft = -d;
@@ -101,23 +109,114 @@
 			this.scene.add(ambLight);
 			this.scene.add(light);
 
+			//arrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), 50, 0xff0000);
+			//arrow.position.set(-200, 0, -200);
 
 			//ground 
+			//var grndTex  = THREE.ImageUtils.loadTexture("texture/rough_texture1.png");
+			//grndTex.minFilter = THREE.NearestFilter;
+			//grndTex.wrapS = grndTex.wrapT = THREE.RepeatWrapping;
+			//grndTex.repeat.set(25, 25);
+			//grndTex.anisotropy = 16;
+			//var grndMat  = new THREE.MeshPhongMaterial( { color: 0x003300, specular: 0x111111, map: grndTex});
 			var grndMat  = new THREE.MeshPhongMaterial( { color: 0x003300, specular: 0x111111 });
 			var grndGeom = new THREE.PlaneBufferGeometry(600, 500);
 			ground = new THREE.Mesh(grndGeom, grndMat);
 			ground.position.y = -250;
-			ground.position.x = -Math.PI / 2;
 			ground.receiveShadow = true;
-
 			this.scene.add(ground);
+
+			//green
+			//var greenMat  = new THREE.MeshPhongMaterial( { color: 0x00e500, specular: 0x111111});
+			var greenMat  = new THREE.MeshPhongMaterial( { color: 0x00ff00, specular: 0x111111});
+			var greenGeom = new THREE.CircleGeometry(1.3, 32);
+			green = new THREE.Mesh(greenGeom, greenMat);
+			green.rotation.x += 1.15;
+			green.position.y = -.35;
+			green.position.z = 1;
+			green.receiveShadow = true;
+			this.scene.add(green);
+
+			//flag 
+			var flagMat  = new THREE.MeshPhongMaterial( { color: 0xffff00, specular: 0x111111});
+			//var flagMat= new THREE.MeshPhongMaterial( {alphaTest:0.5, ambient: 0xffffff, color: 0xffffff, specular: 0x030303, emissive: 0x111111,shiness: 10, side: THREE.DoubleSide});
+
+			clothGeometry = new THREE.ParametricGeometry(clothFunction, cloth.w, cloth.h);
+			clothGeometry.dynamic = true;
+			clothGeometry.computeFaceNormals();
+
+			//var clothGeometry = new THREE.BoxGeometry(0.23, 0.15, 0.01);
+			flag = new THREE.Mesh(clothGeometry, flagMat);
+			flag.position.set(0,-10,-10);
+			//flag.position.x = -0.12;
+			//flag.position.y = 0.38;
+			flag.receiveShadow = true;
+			flag.castShadow = true;
+			this.scene.add(flag);
+
+			//pole
+			var poleMat  = new THREE.MeshPhongMaterial( { color: 0xffff7f, specular: 0x111111, shiness: 100});
+			var poleGeom = new THREE.BoxGeometry(0.0075, 0.50, 1);
+			pole = new THREE.Mesh(poleGeom, poleMat);
+			pole.position.x = 0;
+			pole.position.y = 0.30;
+			pole.position.z = 1.75;
+			pole.receiveShadow = true;
+			pole.castShadow = true;
+			this.scene.add(pole);
+
+			//trees
+			var triangle = new THREE.Shape();
+			triangle.moveTo(0.2,0);
+			triangle.lineTo(0,0.7);
+			triangle.lineTo(-0.2,0);
+			triangle.lineTo(0.2,0);
+			var treeGeom = new THREE.ShapeGeometry(triangle);
+			var treeMat  = new THREE.MeshBasicMaterial( { color: 0x14190f } );
+			treeMat.side = THREE.DoubleSide;
+
+			var forestGeom = new THREE.Geometry();
+			var dummy  = new THREE.Mesh();
+
+			var forest = new THREE.Group();
+
+			for (var i = -1000; i < 1000; i++)
+			{
+				var tree = new THREE.Mesh(treeGeom, treeMat);
+
+				tree.position.x = Math.random() * i + 1; 
+				tree.position.y = 0;
+				
+				forest.add(tree);
+			}
+
+			this.scene.add(forest);
 
 		}
 
 		//updates each frame
 		this.update = function() {
-			//box.rotation.x += 0.01;
-			//box.rotation.y += 0.02;
+
+			simulate(time);
+
+			var p = cloth.particles;
+			//windStrengh = Math.cos(time/7000) * 1000;
+			windStrength = 1000;
+			windForce.set(Math.sin(time/2000),Math.cos(time/3000),Math.sin(time/1000)).normalize().multiplyScalar(windStrength);
+
+			//from cloth.js
+			/*for (var i = 0, il = p.length; i < il; i++) 
+			{
+				clothGeometry.vertices[i].copy(p[i].position);
+			}*/
+
+			clothGeometry.computeFaceNormals();
+			clothGeometry.computeVertexNormals();
+
+			clothGeometry.normalsNeedUpdate = true;
+			clothGeometry.verticesNeedUpdate = true;
+
+			pins = [0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110];
 		}
 
 		}//functionScene1

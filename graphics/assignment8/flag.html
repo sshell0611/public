@@ -1,0 +1,144 @@
+
+<html>
+	<head>
+		<title>Waving Flag</title>
+		<style>canvas { width: 100%; height: 100% }</style>
+	</head>
+	<body>
+		<script src="js/three.js"></script>
+		<script src="Cloth.js"></script>
+		<script>
+		
+		/* testing cloth simulation */
+		    
+			var scene = new THREE.Scene();
+			
+			//camera and position
+			//var camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 10000);
+			var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+			camera.position.y = 0;
+			camera.position.z = 5;
+			//scene.add(camera);
+
+			var renderer = new THREE.WebGLRenderer({antialias: true});
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.setClearColor(); //sets the background to a grayish color
+			renderer.shadowMapEnabled = true;
+			document.body.appendChild(renderer.domElement);
+			
+			var flagMaterial = new THREE.MeshPhongMaterial( {alphaTest:0.5, ambient: 0xffffff, color: 0xffffff, specular: 0x030303, emissive: 0x111111,
+			shiness: 10, side: THREE.DoubleSide});
+						
+			var clothGeometry = new THREE.ParametricGeometry(clothFunction, cloth.w, cloth.h);
+			//clothGeometry.dynamic = true;
+			//clothGeometry.computeFaceNormals();
+			
+			//flag mesh
+			
+			object = new THREE.Mesh(clothGeometry, flagMaterial);
+			object.position.set(0,0,0);
+			object.castShadow = true;
+			object.receiveShadow = true;
+			scene.add(object);
+			
+			//skybox
+			/*var skyGeometry = new THREE.BoxGeometry(10000,10000,1);
+			var skyMaterial = new THREE.MeshBasicMaterial({color: 0x33CCFF, side: THREE.BackSide});
+			var skybox = new THREE.Mesh(skyGeometry, skyMaterial);
+			scene.add(skybox);*/
+			
+			//LIGHTS
+			var light, materials;
+
+			scene.add( new THREE.AmbientLight( 0x666666 ) );
+
+			light = new THREE.DirectionalLight( 0xdfebff, 1.75 );
+			light.position.set( 0, 100, 100 );
+			light.position.multiplyScalar( 1.3 );
+
+			light.castShadow = true;
+			//light.shadowCameraVisible = true;
+
+			light.shadowMapWidth = 2048;
+			light.shadowMapHeight = 2048;
+
+			var d = 300;
+
+			light.shadowCameraLeft = -d;
+			light.shadowCameraRight = d;
+			light.shadowCameraTop = d;
+			light.shadowCameraBottom = -d;
+			light.shadowCameraFar = 1000;
+			light.shadowDarkness = 0.5;
+
+			scene.add( light );
+
+			light = new THREE.DirectionalLight( 0x3dff0c, 0.35 );
+			light.position.set( 0, -1, 0 );
+
+			scene.add( light );
+			
+			
+			// create the ground plane
+ /*       	var planeGeometry = new THREE.PlaneGeometry(900,900); 
+    	var floorTexture = new THREE.ImageUtils.loadTexture( 'grass.jpg' );
+    	floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
+			
+	    var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+        var plane = new THREE.Mesh(planeGeometry,floorMaterial);
+        plane.receiveShadow = true;
+
+
+        // rotate and position the plane
+        plane.rotation.x=-0.5*Math.PI;
+        plane.position.x=15
+        plane.position.y=-115
+        plane.position.z=-5
+
+        // add the plane to the scene
+        scene.add(plane);*/
+        
+       
+		//camera.lookAt(scene.position);
+		//arrow = new THREE.ArrowHelper( new THREE.Vector3( 0, 1, 0 ), new THREE.Vector3( 0, 0, 0 ), 50, 0xff0000 );
+		//arrow.position.set( -400, 0, -200 );
+		//scene.add(arrow);
+		//adding things to the renderer
+		
+		
+         var animate = function(){
+
+         requestAnimationFrame(animate);
+         
+         var time = Date.now();
+         
+         //windStrength = Math.cos(time / 7000) * 1000;
+         windStrength = 50;
+         windForce.set( Math.cos(time / 2000), Math.cos(time / 1000), Math.sin(time / 5000)).normalize().multiplyScalar(windStrength);
+         
+         simulate(time); //This turns everything black except the skybox, it also mentions "sphere undefined"
+         render(); //this render here makes the whole browser crash
+         
+         }
+			var render = function () {
+			
+				var p = cloth.particles;
+				for ( var i = 0, il = p.length; i < il; i ++ ) {
+					clothGeometry.vertices[ i ].copy( p[ i ].position );
+				}
+
+				clothGeometry.computeFaceNormals();
+				clothGeometry.computeVertexNormals();
+
+				clothGeometry.normalsNeedUpdate = true;
+				clothGeometry.verticesNeedUpdate = true;
+
+				//camera.lookAt( scene.position );
+				pins = [0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110 ];
+				renderer.render(scene, camera);
+			};
+
+			animate();
+		</script>
+	</body>
+</html>

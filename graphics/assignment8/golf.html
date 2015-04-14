@@ -77,9 +77,10 @@
 		function Scene1() {
 
 		//objects
-		var box, ground, ambLight, light, pole, flag;
+		var box, ground, ambLight, light, pole, flag, flagMat;
 		var green, forest;
 		var arrow;
+		var sky;
 
 		//setup
 		this.setup = function() {
@@ -110,8 +111,6 @@
 			this.scene.add(ambLight);
 			this.scene.add(light);
 
-			//arrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), 50, 0xff0000);
-			//arrow.position.set(-200, 0, -200);
 
 			//ground 
 			//var grndTex  = THREE.ImageUtils.loadTexture("texture/rough_texture1.png");
@@ -139,18 +138,12 @@
 			this.scene.add(green);
 
 			//flag 
-			var flagMat  = new THREE.MeshPhongMaterial( { color: 0xffff00, specular: 0x111111});
-			//var flagMat= new THREE.MeshPhongMaterial( {alphaTest:0.5, ambient: 0xffffff, color: 0xffffff, specular: 0x030303, emissive: 0x111111,shiness: 10, side: THREE.DoubleSide});
-
+			flagMat  = new THREE.MeshPhongMaterial( { color: 0xffff00, specular: 0x111111});
 			clothGeometry = new THREE.ParametricGeometry(clothFunction, cloth.w, cloth.h);
 			clothGeometry.dynamic = true;
 			clothGeometry.computeFaceNormals();
-
-			//var clothGeometry = new THREE.BoxGeometry(0.23, 0.15, 0.01);
 			flag = new THREE.Mesh(clothGeometry, flagMat);
 			flag.position.set(0.14, 0.33, 2);
-			//flag.position.x = -0.12;
-			//flag.position.y = 0.38;
 			flag.receiveShadow = true;
 			flag.castShadow = true;
 			this.scene.add(flag);
@@ -200,9 +193,20 @@
 
 			simulate(time);
 
+			/*var secs = new Date().getSeconds();
+			if (secs % 5 == 0)
+			{
+				//clothGeometry = new THREE.ParametricGeometry(clothFunction, cloth.w, cloth.h);
+				//clothGeometry.dynamic = true;
+				//clothGeometry.computeFaceNormals();
+				//flag = new THREE.Mesh(clothGeometry, flagMat);
+				//flag.position.set(0.14, 0.33, 2);
+				//this.scene.add(flag);
+			}*/
+
 			var p = cloth.particles;
-			//windStrengh = Math.cos(time/7000) * 1000;
-			windStrength = 50;
+			windStrengh = Math.cos(time/7000) * 1000;
+			//windStrength = 50;
 			//windForce.set(10).normalize().multiplyScalar(windStrength);
 			windForce.set(1,1,0).normalize().multiplyScalar(windStrength);
 			//windForce.set(Math.sin(time/2000),Math.cos(time/3000),Math.sin(time/1000)).normalize().multiplyScalar(windStrength);

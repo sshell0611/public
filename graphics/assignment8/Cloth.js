@@ -238,3 +238,11 @@ function simulate(time) {
 
 
 }
+
+
+function SkyDome(i, j) {
+	i -= 0.5;
+	j -= 0.5;
+	var r2 = i * i * 4 + j * j * 4;
+	return new THREE.Vector3(i*20000,(1-r2)*5000,j*20000).multiplyScalar(0.05);
+}

@@ -57,7 +57,8 @@
 <TD width=80%>
 <FONT face=helvetica>
 
-<p><b>A very simple example</b><p>
+<img src="image/masters.png" align=left width=95 height=96>
+<!--<p><b>A very simple example</b><p>-->
 
 <blockquote>
 
@@ -147,7 +148,7 @@
 
 			//var clothGeometry = new THREE.BoxGeometry(0.23, 0.15, 0.01);
 			flag = new THREE.Mesh(clothGeometry, flagMat);
-			flag.position.set(0,-10,-10);
+			flag.position.set(0.14, 0.33, 2);
 			//flag.position.x = -0.12;
 			//flag.position.y = 0.38;
 			flag.receiveShadow = true;
@@ -201,14 +202,17 @@
 
 			var p = cloth.particles;
 			//windStrengh = Math.cos(time/7000) * 1000;
-			windStrength = 1000;
-			windForce.set(Math.sin(time/2000),Math.cos(time/3000),Math.sin(time/1000)).normalize().multiplyScalar(windStrength);
+			windStrength = 50;
+			//windForce.set(10).normalize().multiplyScalar(windStrength);
+			windForce.set(1,1,0).normalize().multiplyScalar(windStrength);
+			//windForce.set(Math.sin(time/2000),Math.cos(time/3000),Math.sin(time/1000)).normalize().multiplyScalar(windStrength);
+			//windForce.set(Math.sin(time/2000),Math.cos(time/3000),0).normalize().multiplyScalar(windStrength);
 
 			//from cloth.js
-			/*for (var i = 0, il = p.length; i < il; i++) 
+			for (var i = 0, il = p.length; i < il; i++) 
 			{
 				clothGeometry.vertices[i].copy(p[i].position);
-			}*/
+			}
 
 			clothGeometry.computeFaceNormals();
 			clothGeometry.computeVertexNormals();

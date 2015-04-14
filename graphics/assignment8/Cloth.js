@@ -10,20 +10,27 @@
 // http://cg.alexandra.dk/tag/spring-mass-system/
 // Real-time Cloth Animation http://www.darwin3d.com/gamedev/articles/col0599.pdf
 
-var DAMPING = 0.03;
-var DRAG = 1 - DAMPING;
-var MASS = .1;
-var restDistance = 1;
+//var DAMPING = 0.00000000003;
+//var DAMPING = 0.003;
+var DAMPING = 0;
+//var DRAG = 1 - DAMPING;
+var DRAG = 1;
+var MASS = .000000000000001;
+//var MASS = 0.1;
+var restDistance = 0.0000000001;
 
 
 var xSegs = 10; //
 var ySegs = 10; //
 
-var clothFunction = plane(restDistance * xSegs, restDistance * ySegs);
+//var clothFunction = plane(restDistance * xSegs, restDistance * ySegs);
+var clothFunction = plane(0.27,0.18);
 
 var cloth = new Cloth(xSegs, ySegs);
 
-var GRAVITY = 981 * 1.4; // 
+//var GRAVITY = 981 * 1.4; // 
+//var GRAVITY = 0.0000000981 * 0.14;
+var GRAVITY = 0;
 var gravity = new THREE.Vector3( 0, -GRAVITY, 0 ).multiplyScalar(MASS);
 
 
@@ -48,7 +55,6 @@ function plane(width, height) {
 		var x = (u - 0.5) * width;
 		var y = (v + 0.5) * height;
 		var z = 0;
-
 		return new THREE.Vector3(x, y, z);
 	};
 }
@@ -207,6 +213,7 @@ function simulate(time) {
 	for (i = 0; i < il; i ++) {
 		constrain = constrains[i];
 		satisifyConstrains(constrain[0], constrain[1], constrain[2]);
+		//satisifyConstrains(constrain[0], constrain[1], constrain[2]);
 	}
 
 	// Ball Constrains

@@ -113,13 +113,13 @@
 
 
 			//ground 
-			//var grndTex  = THREE.ImageUtils.loadTexture("texture/rough_texture1.png");
-			//grndTex.minFilter = THREE.NearestFilter;
-			//grndTex.wrapS = grndTex.wrapT = THREE.RepeatWrapping;
-			//grndTex.repeat.set(25, 25);
-			//grndTex.anisotropy = 16;
-			//var grndMat  = new THREE.MeshPhongMaterial( { color: 0x003300, specular: 0x111111, map: grndTex});
-			var grndMat  = new THREE.MeshPhongMaterial( { color: 0x003300, specular: 0x111111 });
+			var grndTex  = THREE.ImageUtils.loadTexture("texture/rough_texture1.png");
+			grndTex.minFilter = THREE.NearestFilter;
+			grndTex.wrapS = grndTex.wrapT = THREE.RepeatWrapping;
+			grndTex.repeat.set(25, 25);
+			grndTex.anisotropy = 16;
+			var grndMat  = new THREE.MeshPhongMaterial( { color: 0x003300, specular: 0x111111, map: grndTex});
+			//var grndMat  = new THREE.MeshPhongMaterial( { color: 0x003300, specular: 0x111111 });
 			var grndGeom = new THREE.PlaneBufferGeometry(600, 500);
 			ground = new THREE.Mesh(grndGeom, grndMat);
 			ground.position.y = -250;

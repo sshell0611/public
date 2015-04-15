@@ -115,7 +115,8 @@
 			//ground 
 			var grndTex  = THREE.ImageUtils.loadTexture("texture/rough_texture1.png");
 			grndTex.minFilter = THREE.NearestFilter;
-			grndTex.wrapS = THREE.RepeatWrapping;
+			//grndTex.wrapS = THREE.RepeatWrapping;
+			grndTex.wrapS = THREE.ClampToEdgeWrapping;
 			grndTex.wrapT = THREE.ClampToEdgeWrapping;
 			grndTex.repeat.set(25, 25);
 			grndTex.anisotropy = 16;

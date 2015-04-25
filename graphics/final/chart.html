@@ -1,0 +1,243 @@
+<script src=js/three.js></script>
+<body>
+
+<hr color=white size=75>
+
+<table>
+<tr>
+<td width=75></td>
+<td>
+<font face=helvetica>
+
+<script>
+		window.time = 0;
+		window.SimpleScene = function() {
+				this.init = function(name) {
+				this.scene = new THREE.Scene();
+
+				// CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
+
+				var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+				//camera.position.y = 0.8; 
+				camera.position.z = 5;
+				this.scene.add(camera);
+
+				// CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
+
+				var renderer = new THREE.WebGLRenderer( { alpha: true } );
+				renderer.setSize(600, 600);
+				renderer.shadowMapEnabled = true;
+				//renderer.gammaInput = true;
+				//renderer.gammaOutput = true;
+				document.getElementById(name).appendChild(renderer.domElement);
+
+				// CALL THE USER'S SETUP FUNCTION JUST ONCE.
+
+				this.setup();
+
+				// START THE ANIMATION LOOP.
+
+				var that = this;
+				(function tick() {
+					time = (new Date().getTime()) / 1000;
+					that.update();
+					renderer.render(that.scene, camera);
+					//renderer.setClearColor(that.scene.fog.color);
+					requestAnimationFrame(tick);
+				})();
+			}
+		};
+</script>
+
+
+<TABLE>
+<TR>
+<TD width=80%>
+<FONT face=helvetica>
+
+<blockquote>
+
+<table>
+<tr>
+<td id=Scene1_code>
+<pre>
+</pre>
+</td>
+<td id='Scene1_id'></td>
+</tr>
+</table>
+<script src="HammerVis.js"></script>
+<script>
+
+		function Scene1() {
+
+		var bubbleChart;
+		var center = new THREE.Vector2(-1, 1);
+		var sz = new THREE.Vector2(4, 3);
+
+		//setup
+		this.setup = function() {
+
+			//var geom = new THREE.BoxGeometry(2, 2, 0);
+			//var mat  = new THREE.MeshBasicMaterial( { color: 0xff0000});
+			//var cube = new THREE.Mesh(geom, mat);
+			//var edges = new THREE.EdgesHelper(cube, 0x000000);
+			//this.scene.add(edges);
+
+			bubbleChart = new Chart(center, sz);
+			bubbleChart.render(this.scene);
+
+
+			/*
+
+			var material = new THREE.LineBasicMaterial({color: 0x000000});
+			var geometry = new THREE.Geometry();
+			geometry.vertices.push(
+					new THREE.Vector3( -1000, 0, 0 ),
+					new THREE.Vector3( 0, 0, 0 ),
+					new THREE.Vector3( 1000, 0, 0 )
+			);
+			var geometry2 = new THREE.Geometry();
+			geometry2.vertices.push(
+					new THREE.Vector3( 0, 1000, 0 ),
+					new THREE.Vector3( 0, 0, 0 ),
+					new THREE.Vector3( 0, -1000, 0 )
+			);
+
+
+			xaxis = new THREE.Line( geometry, material );
+			yaxis = new THREE.Line( geometry2, material );
+			this.scene.add(xaxis);
+			this.scene.add(yaxis);*/
+
+			/*
+			//background fog color
+			this.scene.fog = new THREE.Fog(0xcce0ff, 3, 10000);
+
+			//light
+			ambLight = new THREE.AmbientLight(0x666666);
+			light = new THREE.DirectionalLight(0xdfebff, 1.75);
+			//light.position.set(50, 200, 100);
+			light.position.set(-3, 2, 7);
+			light.position.multiplyScalar(1.3);
+			light.castShadow = true;
+			//light.shadowMapWidth  = 1024;
+			//light.shadowMapHeight = 1024;
+
+			var d = 300;
+			light.shadowCameraLeft = -d;
+			light.shadowCameraRight = d;
+			light.shadowCameraTop = d;
+			light.shadowCameraBottom = -d;
+			light.shadowCameraFar = 1000;
+			light.shadowDarkness = 0.5;
+
+			this.scene.add(ambLight);
+			this.scene.add(light);
+
+
+			//ground 
+			//var grndTex  = THREE.ImageUtils.loadTexture("texture/rough_texture1.png");
+			//grndTex.minFilter = THREE.NearestFilter;
+			//grndTex.wrapS = THREE.RepeatWrapping;
+			//grndTex.wrapS = THREE.ClampToEdgeWrapping;
+			//grndTex.wrapT = THREE.ClampToEdgeWrapping;
+			//grndTex.repeat.set(16, 16);
+			//grndTex.anisotropy = 16;
+			//var grndMat  = new THREE.MeshPhongMaterial( { color: 0x003300, specular: 0x111111, map: grndTex});
+			var grndMat  = new THREE.MeshPhongMaterial( { color: 0x003300, specular: 0x111111 });
+			var grndGeom = new THREE.PlaneBufferGeometry(600, 500);
+			ground = new THREE.Mesh(grndGeom, grndMat);
+			ground.position.y = -250;
+			ground.receiveShadow = true;
+			this.scene.add(ground);
+
+			//green
+			//var greenMat  = new THREE.MeshPhongMaterial( { color: 0x00e500, specular: 0x111111});
+			var greenMat  = new THREE.MeshPhongMaterial( { color: 0x00ff00, specular: 0x111111});
+			var greenGeom = new THREE.CircleGeometry(1.3, 32);
+			green = new THREE.Mesh(greenGeom, greenMat);
+			green.rotation.x += 1.15;
+			green.position.y = -.35;
+			green.position.z = 1;
+			green.receiveShadow = true;
+			this.scene.add(green);
+
+			//flag 
+			flagMat  = new THREE.MeshPhongMaterial( { color: 0xffff00, specular: 0x111111});
+			clothGeometry = new THREE.ParametricGeometry(clothFunction, cloth.w, cloth.h);
+			clothGeometry.dynamic = true;
+			clothGeometry.computeFaceNormals();
+			flag = new THREE.Mesh(clothGeometry, flagMat);
+			flag.position.set(0.14, 0.33, 2);
+			flag.receiveShadow = true;
+			flag.castShadow = true;
+			this.scene.add(flag);
+
+			//pole
+			var poleMat  = new THREE.MeshPhongMaterial( { color: 0xffff7f, specular: 0x111111, shiness: 100});
+			var poleGeom = new THREE.BoxGeometry(0.0075, 0.50, 1);
+			pole = new THREE.Mesh(poleGeom, poleMat);
+			pole.position.x = 0;
+			pole.position.y = 0.30;
+			pole.position.z = 1.75;
+			pole.receiveShadow = true;
+			pole.castShadow = true;
+			this.scene.add(pole);
+
+			//trees
+			var triangle = new THREE.Shape();
+			triangle.moveTo(0.2,0);
+			triangle.lineTo(0,0.7);
+			triangle.lineTo(-0.2,0);
+			triangle.lineTo(0.2,0);
+			var treeGeom = new THREE.ShapeGeometry(triangle);
+			var treeMat  = new THREE.MeshBasicMaterial( { color: 0x14190f } );
+			treeMat.side = THREE.DoubleSide;
+
+			var forestGeom = new THREE.Geometry();
+			var dummy  = new THREE.Mesh();
+
+			var forest = new THREE.Group();
+
+			for (var i = -1000; i < 1000; i++)
+			{
+				var tree = new THREE.Mesh(treeGeom, treeMat);
+
+				tree.position.x = Math.random() * i + 1; 
+				tree.position.y = 0;
+				
+				forest.add(tree);
+			}
+
+			this.scene.add(forest);*/
+		}
+
+		//updates each frame
+		this.update = function() {
+
+				//chart.update()
+
+		}
+
+		}//functionScene1
+
+		Scene1.prototype = new SimpleScene;
+		new Scene1().init('Scene1_id');
+
+
+</script>
+</blockquote>
+
+</FONT>
+</TD>
+</TR>
+</TABLE>
+
+
+<hr color=white size=1000>
+</font>
+</td><td width=75>&nbsp;</td></tr></table>
+</body>
+
+

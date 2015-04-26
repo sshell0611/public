@@ -69,22 +69,37 @@
 <script src="HammerVis.js"></script>
 <script>
 
+		function CreateBubbleSeries() {
+
+			var series = new Series("Test", "bubble");
+
+			var pts = [
+					new BubblePoint( 1.0 , 2.0 ,  1.0 ),
+					new BubblePoint( 0.0 ,-1.0 ,  1.5 ),
+					new BubblePoint(-1.0 ,-2.0 ,  2.0 ),
+					new BubblePoint(-0.5 , 2.0 ,  0.5 ),
+					new BubblePoint(-0.25, 0.5 ,  0.25),
+					new BubblePoint( 0.1 , 0.25,  0.5 )
+			];
+
+			series.addPoints(pts);
+			return series;
+		}
+
+
 		function Scene1() {
 
 		var bubbleChart;
 		var center = new THREE.Vector2(-1, 1);
-		var sz = new THREE.Vector2(4, 3);
+		var sz = new THREE.Vector2(4.5, 3.5);
+		var series = CreateBubbleSeries();
 
 		//setup
 		this.setup = function() {
 
-			//var geom = new THREE.BoxGeometry(2, 2, 0);
-			//var mat  = new THREE.MeshBasicMaterial( { color: 0xff0000});
-			//var cube = new THREE.Mesh(geom, mat);
-			//var edges = new THREE.EdgesHelper(cube, 0x000000);
-			//this.scene.add(edges);
 
 			bubbleChart = new Chart(center, sz);
+			bubbleChart.addSeries(series);
 			bubbleChart.render(this.scene);
 
 

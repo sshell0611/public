@@ -1,0 +1,150 @@
+<script src=js/three.js></script>
+<body>
+
+<hr color=white size=75>
+
+<table>
+<tr>
+<td width=75></td>
+<td>
+<font face=helvetica>
+
+<script>
+		window.time = 0;
+		window.SimpleScene = function() {
+				this.init = function(name) {
+				this.scene = new THREE.Scene();
+
+				// CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
+
+				var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+				//camera.position.x = 1;
+				//camera.position.y = 5; 
+				camera.position.z = 1;
+				this.scene.add(camera);
+
+				// CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
+
+				var renderer = new THREE.WebGLRenderer( { alpha: true } );
+				renderer.setSize(600, 600);
+				renderer.shadowMapEnabled = true;
+				//renderer.gammaInput = true;
+				//renderer.gammaOutput = true;
+				document.getElementById(name).appendChild(renderer.domElement);
+
+				// CALL THE USER'S SETUP FUNCTION JUST ONCE.
+
+				this.setup();
+
+				// START THE ANIMATION LOOP.
+
+				var that = this;
+				(function tick() {
+					time = (new Date().getTime()) / 1000;
+					that.update();
+					renderer.render(that.scene, camera);
+					//renderer.setClearColor(that.scene.fog.color);
+					requestAnimationFrame(tick);
+				})();
+			}
+		};
+</script>
+
+
+<TABLE>
+<TR>
+<TD width=80%>
+<FONT face=helvetica>
+
+<blockquote>
+
+<table>
+<tr>
+<td id=Scene1_code>
+<pre>
+</pre>
+</td>
+<td id='Scene1_id'></td>
+</tr>
+</table>
+<script src="HammerVis.js"></script>
+<script>
+
+
+		function Scene1() {
+
+		var bubbleChart, ambLight, light;
+		//var center = new THREE.Vector2(-1, 1);
+		//var sz = new THREE.Vector2(4.5, 3.5);
+		//var series = CreateBubbleSeries();
+
+		//setup
+		this.setup = function() {
+
+			ambLight = new THREE.AmbientLight(0x666666);
+			light = new THREE.DirectionalLight(0xffffff);
+			light.position.set(1,1,1).normalize();
+			this.scene.add(light);
+
+			//var geometry = new THREE.Geometry();
+			//geometry.vertices.push( [
+			//		]);
+
+			//geometry.faces.push(
+			//		new THREE.Face3( 0, 1, 2)
+			//		);
+
+			//geometry.computeFaceNormals();
+
+			var curve = new THREE.LineCurve( [
+					/*new THREE.Vector3(0 , 0),
+					new THREE.Vector3(1 , 0)*/
+
+					new THREE.Vector2(.0857 , .1277),
+					new THREE.Vector2(.1714 , .1351)
+					/*new THREE.Vector2(.26   , .1400),
+					new THREE.Vector2(.3485, .1427)
+					/*new THREE.Vector2(.4343, .1467),
+					new THREE.Vector2(.52  , .1534),
+					new THREE.Vector2(.78  , .1605),
+					new THREE.Vector2(1.042, .1670),
+					new THREE.Vector2(1.562, .1776),
+					new THREE.Vector2(2.085, .1850)*/
+				]);
+
+			var path = new THREE.Path(curve.getPoints(100));
+			var geometry = path.createPointsGeometry(100);
+			var material = new THREE.LineBasicMaterial( { color : 0xff0000 });
+			var obj = new THREE.Line(geometry, material);
+			this.scene.add(obj);
+
+		}
+
+		//updates each frame
+		this.update = function() {
+
+			//chart.update()
+
+		}
+
+		}//functionScene1
+
+		Scene1.prototype = new SimpleScene;
+		new Scene1().init('Scene1_id');
+
+
+</script>
+</blockquote>
+
+</FONT>
+</TD>
+</TR>
+</TABLE>
+
+
+<hr color=white size=1000>
+</font>
+</td><td width=75>&nbsp;</td></tr></table>
+</body>
+
+

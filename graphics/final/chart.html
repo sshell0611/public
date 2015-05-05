@@ -1,4 +1,6 @@
 <script src=js/three.js></script>
+<script src="js/renderers/Projector.js"></script>
+<script src="js/renderers/CanvasRenderer.js"></script>
 <body>
 
 <hr color=white size=75>
@@ -25,6 +27,7 @@
 				// CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
 
 				var renderer = new THREE.WebGLRenderer( { alpha: true } );
+				//var renderer = new THREE.CanvasRenderer( { alpha: true } );
 				renderer.setSize(600, 600);
 				renderer.shadowMapEnabled = true;
 				//renderer.gammaInput = true;
@@ -89,7 +92,7 @@
 
 		function Scene1() {
 
-		var bubbleChart;
+		var bubbleChart, ambLight, light;
 		var center = new THREE.Vector2(-1, 1);
 		var sz = new THREE.Vector2(4.5, 3.5);
 		var series = CreateBubbleSeries();
@@ -97,41 +100,20 @@
 		//setup
 		this.setup = function() {
 
+			ambLight = new THREE.AmbientLight(0x666666);
+			light = new THREE.DirectionalLight(0xffffff);
+			light.position.set(1,1,1).normalize();
+			this.scene.add(light);
 
-			bubbleChart = new Chart(center, sz);
+			bubbleChart = new Chart('bubble', center, sz);
 			bubbleChart.addSeries(series);
 			bubbleChart.render(this.scene);
 
 
 			/*
 
-			var material = new THREE.LineBasicMaterial({color: 0x000000});
-			var geometry = new THREE.Geometry();
-			geometry.vertices.push(
-					new THREE.Vector3( -1000, 0, 0 ),
-					new THREE.Vector3( 0, 0, 0 ),
-					new THREE.Vector3( 1000, 0, 0 )
-			);
-			var geometry2 = new THREE.Geometry();
-			geometry2.vertices.push(
-					new THREE.Vector3( 0, 1000, 0 ),
-					new THREE.Vector3( 0, 0, 0 ),
-					new THREE.Vector3( 0, -1000, 0 )
-			);
-
-
-			xaxis = new THREE.Line( geometry, material );
-			yaxis = new THREE.Line( geometry2, material );
-			this.scene.add(xaxis);
-			this.scene.add(yaxis);*/
-
-			/*
-			//background fog color
-			this.scene.fog = new THREE.Fog(0xcce0ff, 3, 10000);
 
 			//light
-			ambLight = new THREE.AmbientLight(0x666666);
-			light = new THREE.DirectionalLight(0xdfebff, 1.75);
 			//light.position.set(50, 200, 100);
 			light.position.set(-3, 2, 7);
 			light.position.multiplyScalar(1.3);

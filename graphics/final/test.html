@@ -1,0 +1,188 @@
+<script src=js/three.js></script>
+<body>
+
+<hr color=white size=75>
+
+<table>
+<tr>
+<td width=75></td>
+<td>
+<font face=helvetica>
+
+<script>
+		window.time = 0;
+		window.SimpleScene = function() {
+				this.init = function(name) {
+				this.scene = new THREE.Scene();
+
+				// CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
+
+				var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+				//camera.position.x = 1;
+				//camera.position.y = 5; 
+				camera.position.z = 105;
+				this.scene.add(camera);
+
+				// CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
+
+				var renderer = new THREE.WebGLRenderer( { alpha: true } );
+				renderer.setSize(600, 600);
+				renderer.shadowMapEnabled = true;
+				//renderer.gammaInput = true;
+				//renderer.gammaOutput = true;
+				document.getElementById(name).appendChild(renderer.domElement);
+
+				// CALL THE USER'S SETUP FUNCTION JUST ONCE.
+
+				this.setup();
+
+				// START THE ANIMATION LOOP.
+
+				var that = this;
+				(function tick() {
+					time = (new Date().getTime()) / 1000;
+					that.update();
+					renderer.render(that.scene, camera);
+					//renderer.setClearColor(that.scene.fog.color);
+					requestAnimationFrame(tick);
+				})();
+			}
+		};
+</script>
+
+
+<TABLE>
+<TR>
+<TD width=80%>
+<FONT face=helvetica>
+
+<blockquote>
+
+<table>
+<tr>
+<td id=Scene1_code>
+<pre>
+</pre>
+</td>
+<td id='Scene1_id'></td>
+</tr>
+</table>
+<script src="HammerVis.js"></script>
+<script>
+
+
+		function Scene1() {
+
+		var bubbleChart, ambLight, light;
+		//var center = new THREE.Vector2(-1, 1);
+		//var sz = new THREE.Vector2(4.5, 3.5);
+		//var series = CreateBubbleSeries();
+
+		//setup
+		this.setup = function() {
+
+			ambLight = new THREE.AmbientLight(0x666666);
+			light = new THREE.DirectionalLight(0xffffff);
+			light.position.set(1,1,1).normalize();
+			this.scene.add(light);
+
+			var shape = new THREE.Shape();
+			shape.moveTo(0,0);
+			shape.lineTo(10,40);
+            shape.bezierCurveTo(15, 25, 25, 25, 30, 40);
+            // spline back down
+            shape.splineThru(
+                    [new THREE.Vector2(32, 30),
+                        new THREE.Vector2(28, 20),
+                        new THREE.Vector2(30, 10),
+                    ])
+            // curve at the bottom
+            shape.quadraticCurveTo(20, 15, 10, 10);
+
+            var options = {
+                    amount:2.2, 
+                    bevelThickness: 6.8,
+                    bevelSize: 0,
+                    bevelSegments: 4,
+                    bevelEnabled: true, 
+                    curveSegments: 30,
+                    steps: 1
+                };
+
+			var geom = new THREE.ExtrudeGeometry(shape, options);
+			geom.applyMatrix(new THREE.Matrix4().makeTranslation(0,0,0));
+
+			var material = new THREE.MeshNormalMaterial({transparent:true, opacity:0.7});
+			var wire = new THREE.MeshBasicMaterial();
+			wire.wireframe = true;
+
+			var obj = THREE.SceneUtils.createMultiMaterialObject(geom, [material]);
+
+			this.scene.add(obj);
+
+			/*
+			var geometry = new THREE.Geometry();
+			geometry.vertices.push( [
+					new THREE.Vector3(30, 10, 25),
+					new THREE.Vector3(30, 8, 50),
+					new THREE.Vector3(30, 7, 75),
+					new THREE.Vector3(60, 12, 25),
+					new THREE.Vector3(60, 10, 50),
+					new THREE.Vector3(60, 9, 75),
+					new THREE.Vector3(90, 11, 25),
+					new THREE.Vector3(90, 10.5, 50),
+					new THREE.Vector3(90, 10, 75)
+					]);
+
+			geometry.faces.push(
+					new THREE.Face3( 0, 1, 2)
+					);
+
+			geometry.computeFaceNormals();
+
+			var curve = new THREE.SplineCurve3( [
+					new THREE.Vector3(-10, 0, 10),
+					new THREE.Vector3(-5, 5, 5),
+					new THREE.Vector3(0, 0, 0),
+					new THREE.Vector3(5, -5, 5),
+					new THREE.Vector3(10, 0, 10)
+				]);
+
+			var geometry = new THREE.Geometry();
+			geometry.vertices = curve.getPoints(50);
+
+			var material = new THREE.LineBasicMaterial( { color : 0xff0000 });
+			var obj = new THREE.Mesh(geometry, material);
+			this.scene.add(obj);
+			*/
+
+		}
+
+		//updates each frame
+		this.update = function() {
+
+			//chart.update()
+
+		}
+
+		}//functionScene1
+
+		Scene1.prototype = new SimpleScene;
+		new Scene1().init('Scene1_id');
+
+
+</script>
+</blockquote>
+
+</FONT>
+</TD>
+</TR>
+</TABLE>
+
+
+<hr color=white size=1000>
+</font>
+</td><td width=75>&nbsp;</td></tr></table>
+</body>
+
+

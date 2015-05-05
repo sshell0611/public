@@ -1,0 +1,222 @@
+<script src=js/three.js></script>
+<body>
+
+<hr color=white size=75>
+
+<table>
+<tr>
+<td width=75></td>
+<td>
+<font face=helvetica>
+
+<script>
+		window.time = 0;
+		window.SimpleScene = function() {
+				this.init = function(name) {
+				this.scene = new THREE.Scene();
+
+				// CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
+
+				var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+				//camera.position.x = 1;
+				//camera.position.y = 5; 
+				camera.position.z = 5;
+				this.scene.add(camera);
+
+				// CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
+
+				var renderer = new THREE.WebGLRenderer( { alpha: true } );
+				renderer.setSize(600, 600);
+				renderer.shadowMapEnabled = true;
+				//renderer.gammaInput = true;
+				//renderer.gammaOutput = true;
+				document.getElementById(name).appendChild(renderer.domElement);
+
+				// CALL THE USER'S SETUP FUNCTION JUST ONCE.
+
+				this.setup();
+
+				// START THE ANIMATION LOOP.
+
+				var that = this;
+				(function tick() {
+					time = (new Date().getTime()) / 1000;
+					that.update();
+					renderer.render(that.scene, camera);
+					//renderer.setClearColor(that.scene.fog.color);
+					requestAnimationFrame(tick);
+				})();
+			}
+		};
+</script>
+
+
+<TABLE>
+<TR>
+<TD width=80%>
+<FONT face=helvetica>
+
+<blockquote>
+
+<table>
+<tr>
+<td id=Scene1_code>
+<pre>
+</pre>
+</td>
+<td id='Scene1_id'></td>
+</tr>
+</table>
+<script src="HammerVis.js"></script>
+<script>
+
+
+		function Scene1() {
+
+		var bubbleChart, ambLight, light;
+		var plane;
+		//var center = new THREE.Vector2(-1, 1);
+		//var sz = new THREE.Vector2(4.5, 3.5);
+		//var series = CreateBubbleSeries();
+
+		//setup
+		this.setup = function() {
+
+			ambLight = new THREE.AmbientLight(0x666666);
+			light = new THREE.DirectionalLight(0xffffff);
+			light.position.set(1,1,1).normalize();
+			this.scene.add(light);
+
+			var geometry = new THREE.PlaneGeometry(1, 1, 4, 4);
+			var vertices = geometry.vertices;
+			//var vertices = geometry.attributes.position.array;
+			for (var i =0; i < vertices.length; i++)
+			{
+				console.log('----------')
+				console.log(i);
+				//console.log(tmp[i]);
+				console.log('----------')
+
+				var x = vertices[i].x;
+				var y = vertices[i].y;
+				var z = vertices[i].z;
+
+				if (i == 0 || i == 24)
+					vertices[i].set(x,y,-0.5);
+
+				/*if (i == 2)
+				{
+					vertices[i] = -1;
+				}*/
+
+				/*
+				if (i == 11)
+					vertices[i] = 1;
+				*/
+
+				//var x = vertices[i].x;
+				//var y = vertices[i].y;
+				//var z = vertices[i].z;
+				//console.log('vertex: ' + x + ';' + y + ';' + z);
+			}
+			//geometry.vertices.push([
+			//							new THREE.Vector3(0,0,0)
+			//					   ]);
+			//var material = new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide});
+			var material = new THREE.MeshLambertMaterial( { color: 0xf0f0f0, shading: THREE.FlatShading});
+			//material.wireframe = true;
+			plane = new THREE.Mesh(geometry, material);
+			//plane.rotation.x += 1.0;
+			this.scene.add(plane);
+
+
+			/*
+			var particleCount = 1,
+				particles = new THREE.Geometry(),
+				pMaterial = new THREE.PointCloudMaterial({
+					color: 0x000000,
+					size: 2
+				});
+
+			// now create the individual particles
+			for (var p = 0; p < particleCount; p++) {
+
+				// create a particle with random
+				// position values, -250 -> 250
+				var pX = Math.random() * 500 - 250,
+					pY = Math.random() * 500 - 250,
+					pZ = Math.random() * 500 - 250,
+					particle = new THREE.Vector3(pX, pY, pZ);
+				particle = new THREE.Vector3(0,0,0);
+
+				// add it to the geometry
+				particles.vertices.push(particle);
+			}
+			particles.computeBoundingBox();
+
+			// create the particle system
+			var particleSystem = new THREE.PointCloud(particles,pMaterial);
+
+			// add it to the scene
+			this.scene.add(particleSystem);
+			*/
+
+			/*var geometry = new THREE.Geometry();
+			geometry.vertices.push( [
+					new THREE.Vector3(0,0,0)
+					new THREE.Vector3(0, 10, 25),
+					new THREE.Vector3(0, 8, 50),
+					new THREE.Vector3(0, 7, 75),
+					new THREE.Vector3(1, 12, 25),
+					new THREE.Vector3(1, 10, 50),
+					new THREE.Vector3(1, 9, 75),
+					new THREE.Vector3(2, 11, 25),
+					new THREE.Vector3(2, 10.5, 50),
+					new THREE.Vector3(2, 10, 75)
+					]);
+
+			//geometry.computeBoundingBox();
+
+			var pointSize = 2;
+			var material = new THREE.PointCloudMaterial( { size: pointSize, color: 0x000000});
+			var pointCloud = new THREE.PointCloud( geometry, material );
+			//pointCloud.position.set(0, 0, 0);
+			this.scene.add(pointCloud);
+			*/
+
+
+			/*
+			var material = new THREE.LineBasicMaterial( { color : 0xff0000 });
+			var obj = new THREE.Mesh(geometry, material);
+			this.scene.add(obj);
+			*/
+		}
+
+		//updates each frame
+		this.update = function() {
+
+			//chart.update()
+
+		}
+
+		}//functionScene1
+
+		Scene1.prototype = new SimpleScene;
+		new Scene1().init('Scene1_id');
+
+
+</script>
+</blockquote>
+
+</FONT>
+</TD>
+</TR>
+</TABLE>
+
+
+<hr color=white size=1000>
+</font>
+</td><td width=75>&nbsp;</td></tr></table>
+</body>
+
+

@@ -1,0 +1,167 @@
+<script src=js/three.js></script>
+<script src="js/renderers/Projector.js"></script>
+<script src="js/renderers/CanvasRenderer.js"></script>
+<body>
+
+<hr color=white size=75>
+
+<table>
+<tr>
+<td width=75></td>
+<td>
+<font face=helvetica>
+
+<script>
+		window.time = 0;
+		window.SimpleScene = function() {
+				this.init = function(name) {
+				this.scene = new THREE.Scene();
+
+				// CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
+
+				var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+				//camera.position.x = 1.0; 
+				//camera.position.y = 2.0; 
+				camera.position.z = 5;
+				this.scene.add(camera);
+
+				// CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
+
+				//var renderer = new THREE.WebGLRenderer( { alpha: true } );
+				var renderer = new THREE.CanvasRenderer( { alpha: true } );
+				renderer.setSize(600, 600);
+				renderer.shadowMapEnabled = true;
+				//renderer.gammaInput = true;
+				//renderer.gammaOutput = true;
+				document.getElementById(name).appendChild(renderer.domElement);
+
+				// CALL THE USER'S SETUP FUNCTION JUST ONCE.
+
+				this.setup();
+
+				// START THE ANIMATION LOOP.
+
+				var that = this;
+				(function tick() {
+					time = (new Date().getTime()) / 1000;
+					that.update();
+					renderer.render(that.scene, camera);
+					//renderer.setClearColor(that.scene.fog.color);
+					requestAnimationFrame(tick);
+				})();
+			}
+		};
+</script>
+
+
+<TABLE>
+<TR>
+<TD width=80%>
+<FONT face=helvetica>
+
+<blockquote>
+
+<table>
+<tr>
+<td id=Scene1_code>
+<pre>
+</pre>
+</td>
+<td id='Scene1_id'></td>
+</tr>
+</table>
+<script src="HammerVis.js"></script>
+<script>
+
+		function CreateLineSeries() {
+
+			var series = new Series("Test", "line");
+
+			var pts = [
+					/*new SeriesPoint(-2.25, -1.3664),
+					new SeriesPoint(-1.75, -1.28102),
+					new SeriesPoint(-1.25, -0.96416),
+					new SeriesPoint(-0.75, -0.78718),
+					new SeriesPoint(-0.25, -0.52714),
+					new SeriesPoint(0.25, -0.10292),
+					new SeriesPoint(0.75,  0.35665),
+					new SeriesPoint(1.25,   0.77143),
+					new SeriesPoint(1.75,  1.45215),
+					new SeriesPoint(2.25,   1.92819)*/
+					/*new SeriesPoint(1, 12.77),
+					new SeriesPoint(2, 13.51),
+					new SeriesPoint(3, 14.00),
+					new SeriesPoint(4 ,14.27),
+					new SeriesPoint(5 ,14.67),
+					new SeriesPoint(6 ,15.34),
+					new SeriesPoint(7 ,16.05),
+					new SeriesPoint(8 ,16.70),
+					new SeriesPoint(9 ,17.76),
+					new SeriesPoint(10,18.50)*/
+					new SeriesPoint(30, 12.77),
+					new SeriesPoint(60, 13.51),
+					new SeriesPoint(91, 14.00),
+					new SeriesPoint(122,14.27),
+					new SeriesPoint(152,14.67),
+					new SeriesPoint(182,15.34),
+					new SeriesPoint(273,16.05),
+					new SeriesPoint(365,16.70)
+					/*new SeriesPoint(547,17.76),
+					new SeriesPoint(730,18.50)*/
+			];
+
+			series.addPoints(pts);
+			return series;
+		}
+
+
+		function Scene1() {
+
+		var lineChart, ambLight, light;
+		var center = new THREE.Vector2(-1, 1);
+		var sz = new THREE.Vector2(4.5, 3.5);
+		var series = CreateLineSeries();
+
+		//setup
+		this.setup = function() {
+
+			ambLight = new THREE.AmbientLight(0x666666);
+			light = new THREE.DirectionalLight(0xffffff);
+			light.position.set(1,1,1).normalize();
+			this.scene.add(light);
+
+			lineChart = new Chart('line', center, sz);
+			lineChart.xAxis.padding = 10;
+			lineChart.addSeries(series);
+			lineChart.render(this.scene);
+
+		}
+
+		//updates each frame
+		this.update = function() {
+
+				//chart.update()
+
+		}
+
+		}//functionScene1
+
+		Scene1.prototype = new SimpleScene;
+		new Scene1().init('Scene1_id');
+
+
+</script>
+</blockquote>
+
+</FONT>
+</TD>
+</TR>
+</TABLE>
+
+
+<hr color=white size=1000>
+</font>
+</td><td width=75>&nbsp;</td></tr></table>
+</body>
+
+

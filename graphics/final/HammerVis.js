@@ -39,7 +39,7 @@ Chart.prototype = {
 			this.yAxis = new Axis('vertical', this);
 			this.xAxis = new Axis('horizontal', this);
 			//hack for now
-			if (this.chartType == 'line') {
+			if (this.chartType.indexOf("line") > -1) {
 				this.yAxis.onlypositive = true;
 				this.yAxis.tickmarks.ignoreFirst = true;
 				this.xAxis.onlypositive = true;
@@ -133,6 +133,9 @@ ChartRendererFactory.prototype.createRenderer = function createRenderer( chartTy
 	else if (chartType == 'line') {
 		renderClass = new LineChartRenderer();	
 	}
+	else if (chartType == 'line_evolution') {
+		renderClass = new LineEvolutionChartRenderer();	
+	}
 
 	return renderClass;
 }
@@ -164,35 +167,23 @@ LineChartRenderer.prototype = {
 
 		for (s = 0; s < chart.series.length; s++) {
 
+			var series = chart.series[s];
 			//color needs to be different for each
-			var material = new THREE.LineBasicMaterial( { color: 0x0000ff, linewidth:2.0, linecap:'bevel', linejoin:'bevel' });
+			var material = new THREE.LineBasicMaterial( { color: series.color, linewidth:2.0, linecap:'bevel', linejoin:'bevel' });
 			var geometry = new THREE.Geometry();
 
 			for (p = 0; p < chart.series[s].numPoints(); p++) {
 				var pt = chart.series[s].getPoint(p);
-				
-				//console.log(pt);
-				//console.log('before: ' + pt.arg + ', ' + pt.val);
+				//pt.color = series.color;
 
 				var screenPt = pt.clone();
-				//var x = chart.xAxis.axisRange.convertTo(xScreenRng, pt.arg);
-				//var y = chart.yAxis.axisRange.convertTo(yScreenRng, pt.val);
 				var x = chart.xAxis.convertPointToScreen(xScreenRng, pt.arg);
 				var y = chart.yAxis.convertPointToScreen(yScreenRng, pt.val);
 
 				screenPt.set(x, y);
-				//console.log(screenPt);
-
-				//console.log('after: ' + screenPt.arg + ', ' + screenPt.val);
-				//first scale to the axis
-				//pt.scale(chart.xAxis.)
-				//then scale to the screen
-				//pt.scale(xFactor, yFactor, 1);
-
 				geometry.vertices.push(screenPt.getVector());
 
 				var circle = screenPt.getDrawable();
-				//console.log(circle);
 				scene.add(circle);
 			}
 
@@ -203,6 +194,101 @@ LineChartRenderer.prototype = {
 
 	},
 
+}
+
+/***********************************************************
+ * LineEvolutionChartRenderer 
+ ***********************************************************/
+var LineEvolutionChartRenderer = function() {
+	this.index = 0;
+	this.animOptions = null;
+	this.init();
+}
+
+LineEvolutionChartRenderer.prototype = {
+
+	init: function() {
+
+		this.animOptions = { duration: 3000
+							};
+	},
+
+	fadeLoop: function(idx, chartOptions, seriesArr) {
+
+		//draw the first one
+		var renderer = this;
+		var animOptions = this.animOptions;
+		s = idx;
+
+		seriesArr[s-1].fadeOut(chartOptions, {duration:2000}, function(){ 
+
+				seriesArr[s].fadeIn(chartOptions, animOptions, function() {
+					s++;
+					if (s < seriesArr.length) {
+						renderer.fadeLoop(s, chartOptions, seriesArr);
+					}
+				
+				});
+		
+		});
+
+		/*seriesArr[s-1].fadeOut(chartOptions, {duration:3000}, function(){ console.log('done fading out');});
+		seriesArr[s].fadeIn(chartOptions, this.animOptions, function() {
+
+			console.log('done fading in' + seriesArr[s].color);
+			s++;
+			console.log(s);
+			if (s < seriesArr.length) {
+				renderer.fadeLoop(s, chartOptions, seriesArr);
+			}
+		
+		});*/
+	
+	},
+
+	draw : function(scene, chart) {
+	
+		console.log('drawing the chart')
+
+		//render border
+		scene.add(chart.border);
+		//render axes
+		chart.xAxis.render(scene);
+		chart.yAxis.render(scene);
+		//render series
+
+		var xScreenRng = chart.getScreenRange('horizontal');
+		var yScreenRng = chart.getScreenRange('vertical');
+
+		var options = { 'scene': scene, 
+						'xAxis': chart.xAxis,
+						'yAxis': chart.yAxis,
+						'xRange': xScreenRng, 
+						'yRange': yScreenRng};
+
+		if (chart.series.length > 1) {
+	
+			var series = chart.series[0];	
+			series.draw(scene, chart.xAxis, chart.yAxis, xScreenRng, yScreenRng);
+
+			this.index = 1;
+
+			this.fadeLoop(1, options, chart.series);
+		}
+
+
+		/*
+		for (s = 0; s < chart.series.length; s++) {
+
+			var series = chart.series[s];
+
+
+			series.fadeIn(options);
+			//series.fadeOut(options);
+		}*/
+
+
+	},
 }
 
 /***********************************************************
@@ -430,7 +516,6 @@ Axis.prototype = {
 			console.log('setDataRange');
 			if (this.onlypositive === true) {
 				if (this.type === 'horizontal') {
-					console.log('here');
 					this.dataRange.lower = 0.0;
 				}
 			}
@@ -477,6 +562,8 @@ var Series = function(name, type) {
 	this.minY = 10000;
 	this.maxW = -10000;
 	this.minW = 10000;
+	this.color = "#0000ff";
+	this.cachedDraw = [];
 	this.init();
 	//dictionary <tag, index>
 }
@@ -502,9 +589,52 @@ Series.prototype = {
 		add: function(pt) {
 			//if (pt.type !== this.type && pt.type !== 'basic')
 			//	throw 'Exception: Point type does not match series type';
+			if (this.type == 'line') {
+				pt.color = this.color;
+			}
 			var len = this.points.length;	
 			this.points[len] = pt;
 			this._evaluateMaxMin(pt);
+		},
+
+		draw: function(scene, xAxis, yAxis, xRange, yRange, opacity) {
+			var opac = 1.0;
+			if (opacity !== 'undefined') { opac = opacity; }
+
+			if (this.type.indexOf('line') > -1) {
+			
+				var material = new THREE.LineBasicMaterial( { color: this.color, linewidth:2.0, linecap:'bevel', linejoin:'bevel' });
+				var geometry = new THREE.Geometry();
+				var line = new THREE.Line(geometry, material);
+
+				for (p = 0; p < this.numPoints(); p++) {
+					var pt = this.getPoint(p);
+
+					var screenPt = pt.clone();
+					var x = xAxis.convertPointToScreen(xRange, pt.arg);
+					var y = yAxis.convertPointToScreen(yRange, pt.val);
+
+					screenPt.set(x, y);
+					geometry.vertices.push(screenPt.getVector());
+
+					var circle = screenPt.getDrawable();
+					circle.material.opacity = opac;
+					scene.add(circle);
+					this.cachedDraw[this.cachedDraw.length] = circle;
+				}
+
+				line.material.opacity = opac;
+				scene.add(line);
+				this.cachedDraw[this.cachedDraw.length] = line;
+			}
+		},
+
+		adjustOpacity: function(opacity) {
+
+			for (i = 0; i < this.cachedDraw.length; ++i) {
+				var mesh = this.cachedDraw[i];
+				mesh.material.opacity = opacity;
+			}
 		},
 
 		addPoints: function(pts) {
@@ -541,6 +671,104 @@ Series.prototype = {
 
 };
 
+/***********************************************************
+ * AnimatedSeries 
+ ***********************************************************/
+var AnimatedSeries = function(name, type, options) {
+	Series.call(this, name, type);
+	this.init(options);
+}
+
+AnimatedSeries.prototype = Object.create(Series.prototype);
+AnimatedSeries.prototype.constructor = AnimatedSeries;
+
+AnimatedSeries.prototype.init = function(options) {
+		//animation options
+};
+
+AnimatedSeries.prototype.animate = function(options) {
+
+	var start = new Date;
+	var id = setInterval(function() {
+
+				var timePassed = new Date - start;
+				var progress = timePassed / options.duration;
+				if (progress > 1) {
+					progress = 1;
+				}
+				options.progress = progress;
+				var delta = options.delta(progress);
+				options.step(delta);
+				if (progress == 1) {
+					clearInterval(id);	
+					options.complete();
+				}
+			}, options.delay || 10);
+};
+
+AnimatedSeries.prototype.fadeIn = function(choptions, animoptions, callback) {
+
+		var scene = choptions['scene'];
+		var xAxis = choptions['xAxis'];
+		var yAxis = choptions['yAxis'];
+		var xRange = choptions['xRange'];
+		var yRange = choptions['yRange'];
+
+		var to = 0;
+		var first = true;
+		this.animate( {
+		
+				series: this,
+				duration: animoptions.duration,
+				delta: function(progress){
+					progress = this.progress;	
+					return progress;
+				},
+				complete: callback,
+				step: function(delta) {
+					var opacity = to + delta;
+					if (first == true) {
+						this.series.draw(scene, xAxis, yAxis, xRange, yRange, opacity);
+						first = false;
+					}
+					else {
+						this.series.adjustOpacity(opacity);
+					}
+				}
+		});
+};
+
+AnimatedSeries.prototype.fadeOut = function(choptions, animoptions, callback) {
+
+		var scene = choptions['scene'];
+		var xAxis = choptions['xAxis'];
+		var yAxis = choptions['yAxis'];
+		var xRange = choptions['xRange'];
+		var yRange = choptions['yRange'];
+
+		var to = 1;
+		var first = true;
+		this.animate( {
+		
+				series: this,
+				duration: animoptions.duration,
+				delta: function(progress){
+					progress = this.progress;	
+					return progress;
+				},
+				complete: callback,
+				step: function(delta) {
+					var opacity = Math.max(to - delta, 0.1);
+					if (first == true) {
+						this.series.draw(scene, xAxis, yAxis, xRange, yRange, opacity);
+						first = false;
+					}
+					else {
+						this.series.adjustOpacity(opacity);
+					}
+				}
+		});
+};
 
 /***********************************************************
  * Series point base class
@@ -552,6 +780,7 @@ var SeriesPoint = function(x, y, type) {
 	this.tag = "";
 	this.color = null;
 	this.mesh = null;
+	this.radius = 0.025;
 	this.init(x, y, type);
 }
 
@@ -560,18 +789,8 @@ SeriesPoint.prototype = {
 		init : function(x, y, type) {
 			this.arg = x;
 			this.val = y;
-			this.color = 0x0000ff;
-		    	if (type !== undefined) this.type = type;
-			var radius = 0.025;
-			var geom = new THREE.CircleGeometry(radius, 32);
-			var mat  = new THREE.MeshBasicMaterial({ color : this.color } );
-			//ambient  : 0,
-			//emissive : 0x0000ff,
-			//color    : 0x0000ff,
-			//specular : 0x101010,
-			//shininess: 50 });
-			this.mesh = new THREE.Mesh(geom, mat);
-			//this.mesh.material.shading = THREE.SmoothShading;
+			this.color = "#0000ff";
+		    if (type !== undefined) this.type = type;
 		},
 
 		set : function(arg, val) {
@@ -588,6 +807,9 @@ SeriesPoint.prototype = {
 		},
 
 		getDrawable: function() {
+			var geom = new THREE.CircleGeometry(this.radius, 32);
+			var mat  = new THREE.MeshBasicMaterial({ color : this.color } );
+			this.mesh = new THREE.Mesh(geom, mat);
 			this.mesh.position.set(this.arg, this.val, 0);
 			return this.mesh;	
 		},
@@ -645,6 +867,11 @@ BubblePoint.prototype.set = function(arg, val, wt) {
 		this.weight = wt;
 	}
 };
+
+BubblePoint.prototype.getDrawable =  function() {
+	this.mesh.position.set(this.arg, this.val, 0);
+	return this.mesh;	
+},
 
 BubblePoint.prototype.scale = function(/*xScale, yScale,*/wScale) {
 	//this.x = this.arg * xScale;

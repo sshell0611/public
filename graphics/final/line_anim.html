@@ -87,7 +87,7 @@
 
 		function CreateLineSeries(num) {
 
-			var series = new Series("Test"+num, "line");
+			var series = new AnimatedSeries("Test"+num, "line");
 
 			var pts = [];
 			if (num == 1){ 
@@ -103,7 +103,18 @@
 					];
 			}
 			else if (num == 2){ 
-					series.color = "#ff0000";
+					pts = [
+							new SeriesPoint(30, 13.27),
+							new SeriesPoint(60, 14.01),
+							new SeriesPoint(91, 14.50),
+							new SeriesPoint(122,15.07),
+							new SeriesPoint(152,15.27),
+							new SeriesPoint(182,16.74),
+							new SeriesPoint(273,17.85),
+							new SeriesPoint(365,17.30)
+					];
+			}
+			else if (num == 3){ 
 					pts = [
 							new SeriesPoint(30, 13.77),
 							new SeriesPoint(60, 14.51),
@@ -115,6 +126,7 @@
 							new SeriesPoint(365,17.70)
 					];
 			}
+
 
 			series.addPoints(pts);
 			return series;
@@ -128,6 +140,7 @@
 		var sz = new THREE.Vector2(4.5, 3.5);
 		var series  = CreateLineSeries(1);
 		var series2 = CreateLineSeries(2); 
+		var series3 = CreateLineSeries(3); 
 
 		//setup
 		this.setup = function() {
@@ -137,22 +150,17 @@
 			light.position.set(1,1,1).normalize();
 			this.scene.add(light);
 
-			lineChart = new Chart('line', center, sz);
+			lineChart = new Chart('line_evolution', center, sz);
 			lineChart.yAxis.padding = 1.0;
 			lineChart.addSeries(series);
 			lineChart.addSeries(series2);
+			lineChart.addSeries(series3);
 			lineChart.render(this.scene);
 
 		}
 
 		//updates each frame
 		this.update = function() {
-
-				//chart.update()
-			count += 1;
-
-			if (count <= 200)
-				console.log(time);
 
 		}
 

@@ -106,108 +106,11 @@
 			this.scene.add(light);
 
 			bubbleChart = new Chart('bubble', center, sz);
+			bubbleChart.yAxis.padding = 1.0;
+			bubbleChart.xAxis.padding = 1.0;
 			bubbleChart.addSeries(series);
 			bubbleChart.render(this.scene);
 
-
-			/*
-
-
-			//light
-			//light.position.set(50, 200, 100);
-			light.position.set(-3, 2, 7);
-			light.position.multiplyScalar(1.3);
-			light.castShadow = true;
-			//light.shadowMapWidth  = 1024;
-			//light.shadowMapHeight = 1024;
-
-			var d = 300;
-			light.shadowCameraLeft = -d;
-			light.shadowCameraRight = d;
-			light.shadowCameraTop = d;
-			light.shadowCameraBottom = -d;
-			light.shadowCameraFar = 1000;
-			light.shadowDarkness = 0.5;
-
-			this.scene.add(ambLight);
-			this.scene.add(light);
-
-
-			//ground 
-			//var grndTex  = THREE.ImageUtils.loadTexture("texture/rough_texture1.png");
-			//grndTex.minFilter = THREE.NearestFilter;
-			//grndTex.wrapS = THREE.RepeatWrapping;
-			//grndTex.wrapS = THREE.ClampToEdgeWrapping;
-			//grndTex.wrapT = THREE.ClampToEdgeWrapping;
-			//grndTex.repeat.set(16, 16);
-			//grndTex.anisotropy = 16;
-			//var grndMat  = new THREE.MeshPhongMaterial( { color: 0x003300, specular: 0x111111, map: grndTex});
-			var grndMat  = new THREE.MeshPhongMaterial( { color: 0x003300, specular: 0x111111 });
-			var grndGeom = new THREE.PlaneBufferGeometry(600, 500);
-			ground = new THREE.Mesh(grndGeom, grndMat);
-			ground.position.y = -250;
-			ground.receiveShadow = true;
-			this.scene.add(ground);
-
-			//green
-			//var greenMat  = new THREE.MeshPhongMaterial( { color: 0x00e500, specular: 0x111111});
-			var greenMat  = new THREE.MeshPhongMaterial( { color: 0x00ff00, specular: 0x111111});
-			var greenGeom = new THREE.CircleGeometry(1.3, 32);
-			green = new THREE.Mesh(greenGeom, greenMat);
-			green.rotation.x += 1.15;
-			green.position.y = -.35;
-			green.position.z = 1;
-			green.receiveShadow = true;
-			this.scene.add(green);
-
-			//flag 
-			flagMat  = new THREE.MeshPhongMaterial( { color: 0xffff00, specular: 0x111111});
-			clothGeometry = new THREE.ParametricGeometry(clothFunction, cloth.w, cloth.h);
-			clothGeometry.dynamic = true;
-			clothGeometry.computeFaceNormals();
-			flag = new THREE.Mesh(clothGeometry, flagMat);
-			flag.position.set(0.14, 0.33, 2);
-			flag.receiveShadow = true;
-			flag.castShadow = true;
-			this.scene.add(flag);
-
-			//pole
-			var poleMat  = new THREE.MeshPhongMaterial( { color: 0xffff7f, specular: 0x111111, shiness: 100});
-			var poleGeom = new THREE.BoxGeometry(0.0075, 0.50, 1);
-			pole = new THREE.Mesh(poleGeom, poleMat);
-			pole.position.x = 0;
-			pole.position.y = 0.30;
-			pole.position.z = 1.75;
-			pole.receiveShadow = true;
-			pole.castShadow = true;
-			this.scene.add(pole);
-
-			//trees
-			var triangle = new THREE.Shape();
-			triangle.moveTo(0.2,0);
-			triangle.lineTo(0,0.7);
-			triangle.lineTo(-0.2,0);
-			triangle.lineTo(0.2,0);
-			var treeGeom = new THREE.ShapeGeometry(triangle);
-			var treeMat  = new THREE.MeshBasicMaterial( { color: 0x14190f } );
-			treeMat.side = THREE.DoubleSide;
-
-			var forestGeom = new THREE.Geometry();
-			var dummy  = new THREE.Mesh();
-
-			var forest = new THREE.Group();
-
-			for (var i = -1000; i < 1000; i++)
-			{
-				var tree = new THREE.Mesh(treeGeom, treeMat);
-
-				tree.position.x = Math.random() * i + 1; 
-				tree.position.y = 0;
-				
-				forest.add(tree);
-			}
-
-			this.scene.add(forest);*/
 		}
 
 		//updates each frame

@@ -41,7 +41,9 @@ Chart.prototype = {
 			//hack for now
 			if (this.chartType == 'line') {
 				this.yAxis.onlypositive = true;
+				this.yAxis.tickmarks.ignoreFirst = true;
 				this.xAxis.onlypositive = true;
+				this.xAxis.tickmarks.ignoreFirst = true;
 			}
 			this.factory = new ChartRendererFactory();
 		},
@@ -163,7 +165,7 @@ LineChartRenderer.prototype = {
 		for (s = 0; s < chart.series.length; s++) {
 
 			//color needs to be different for each
-			var material = new THREE.LineBasicMaterial( { color: 0x0000ff, linewidth:1.0, linecap:'bevel', linejoin:'bevel' });
+			var material = new THREE.LineBasicMaterial( { color: 0x0000ff, linewidth:2.0, linecap:'bevel', linejoin:'bevel' });
 			var geometry = new THREE.Geometry();
 
 			for (p = 0; p < chart.series[s].numPoints(); p++) {
@@ -238,8 +240,8 @@ BubbleChartRenderer.prototype = {
 		var xScreenRng = chart.getScreenRange('horizontal');
 		var yScreenRng = chart.getScreenRange('vertical');
 
-		xFactor = chart.xAxis.getScaleFactor();
-		yFactor = chart.yAxis.getScaleFactor();
+		//xFactor = chart.xAxis.getScaleFactor();
+		//yFactor = chart.yAxis.getScaleFactor();
 
 		wFactor = this._globalWeightFactor(chart);
 
@@ -334,8 +336,12 @@ var Axis = function(type, chart) {
 	this.rangeMin = 0;
 	this.rangeMax = 0;
 	this.buffer = .10;
-	this.padding= 1.0;
+	this.padding= 0.0;
 	this.onlypositive = false;
+	this.labels = null;
+	this.tickmarks = null;
+	this.start = null;
+	this.end   = null;
 	this.init(type, chart);
 }
 
@@ -343,6 +349,8 @@ Axis.prototype = {
 
 		init : function (type, chart) {
 			this.type = type;
+			this.tickmarks = new Tickmarks();
+			this.labels = [];
 			if (chart !== 'undefined') {
 				this.chartRef  = chart;
 				this.axisRange = chart.getScreenRange(type);
@@ -350,16 +358,12 @@ Axis.prototype = {
 		},
 
 		_create : function() {
-		
-			//var margin = this.chartRef.getMargin();
-			var margin = 0;
 			var start, end;
 			if (this.type == 'vertical') {
 				if (this.onlypositive == true) {
-					
 					var screenRng = this.chartRef.getScreenRange('horizontal');
-					start = new THREE.Vector3(screenRng.lower+margin, this.axisRange.lower+margin, 0);
-					end   = new THREE.Vector3(screenRng.lower+margin, this.axisRange.upper-margin, 0);
+					start = new THREE.Vector3(screenRng.lower, this.axisRange.lower, 0);
+					end   = new THREE.Vector3(screenRng.lower, this.axisRange.upper, 0);
 				}
 				else {
 					start = new THREE.Vector3(0, this.axisRange.lower, 0);
@@ -368,32 +372,70 @@ Axis.prototype = {
 			}
 			else {
 				if (this.onlypositive == true) {
-
 					var screenRng = this.chartRef.getScreenRange('vertical');
-					start = new THREE.Vector3(this.axisRange.lower+margin, screenRng.lower+margin, 0);
-					end   = new THREE.Vector3(this.axisRange.upper-margin, screenRng.lower+margin, 0);
+					start = new THREE.Vector3(this.axisRange.lower, screenRng.lower, 0);
+					end   = new THREE.Vector3(this.axisRange.upper, screenRng.lower, 0);
 				}
-
 				else {
 					start = new THREE.Vector3(this.axisRange.lower, 0, 0);
 					end   = new THREE.Vector3(this.axisRange.upper, 0, 0);
 				}
 			}
+			this.start = start;
+			this.end   = end;
 			this.material = new THREE.LineBasicMaterial( { color: 0x7e7e7e, linewidth:this.thickness});
 			this.geometry = new THREE.Geometry();
 			this.geometry.vertices.push( start, end );
 			this.line = new THREE.Line( this.geometry, this.material );
 		},
 
+		_renderTickmarksAndLabels : function(scene) {
+			var width = this.tickmarks.major.thickness;
+			var material = new THREE.LineBasicMaterial( { color: 0x7e7e7e, linewidth:width});
+
+			var tickValues = this.tickmarks.compute(this.dataRange);
+			console.log(tickValues);
+			for (i = 0; i < tickValues.length; ++i)	{
+				var geometry = new THREE.Geometry();
+				var tickval  = Number(tickValues[i]).toFixed(2);
+				var label = new AxisLabel();
+				var labelpos = null;
+				this.labels[this.labels.length] = label;
+				if (this.type == 'vertical') {
+					var screenRng = this.chartRef.getScreenRange('vertical');
+					var x   = this.start.x;
+					var y   = this.dataRange.convertTo(screenRng, tickval);
+					var len = this.tickmarks.major.length;
+					geometry.vertices.push(new THREE.Vector3(x-len, y, 0), new THREE.Vector3(x, y, 0));
+					labelpos = new THREE.Vector3(x-len*2, y, 0);
+				}
+				else {
+					var screenRng = this.chartRef.getScreenRange('horizontal');
+					var y   = this.start.y;
+					var x   = this.dataRange.convertTo(screenRng, tickval);
+					var len = this.tickmarks.major.length;
+					geometry.vertices.push(new THREE.Vector3(x, y, 0), new THREE.Vector3(x, y-len, 0));
+					labelpos = new THREE.Vector3(x, y-len*2, 0);
+				}
+
+				var text = label.getText(tickval, labelpos);
+				var tick = new THREE.Line(geometry, material);
+				scene.add(tick);
+				scene.add(text);
+			}
+		},
+
 		setDataRange : function(rng) {
 			this.dataRange = rng;
+			console.log('setDataRange');
+			if (this.onlypositive === true) {
+				if (this.type === 'horizontal') {
+					console.log('here');
+					this.dataRange.lower = 0.0;
+				}
+			}
 			this.dataRange.addPadding(this.padding);
 			//this.axisRange = rng;
-			var v1 = Math.abs(rng.lower);
-			var v2 = Math.abs(rng.upper);
-			var val = Math.max(v1, v2);
-			this.rangeMin = -val * this.buffer*100.0;
-			this.rangeMax = val * this.buffer*100.0;	
 		},
 
 		scalePoint: function(pt) {
@@ -406,16 +448,14 @@ Axis.prototype = {
 			return sp;
 		},
 
-		getScaleFactor : function() {
-			var range = this.rangeMax - this.rangeMin;
-			return (this.axisRange.getRange() / range);
-		},
-
 		//render type, leave blank for whole axis
 		//render fit will adjust the display just for the visible range 
 		render : function (scene) {
 			this._create();
 			scene.add(this.line);
+			if (this.tickmarks !== null) {
+				this._renderTickmarksAndLabels(scene);
+			}
 		},
 
 		update : function () {
@@ -626,5 +666,95 @@ BubblePoint.prototype.clone = function() {
 	cln.mesh = this.mesh;
 	cln.z = this.z;
 	return cln;
+};
+
+/***********************************************************
+ * Tickmarks
+ ***********************************************************/
+var Tickmarks = function() {
+	this.major = null;
+	this.minor = null;
+	this.values = [];
+	this.ignoreFirst = false;
+	this.init();
+}
+
+Tickmarks.prototype.init = function() {
+	this.major = new TickOptions();
+	this.minor = new TickOptions();
+};
+
+Tickmarks.prototype.compute = function(range) {
+	var interval = range.getRange() / this.major.count;		
+	var i = 0;
+	var start = range.lower;
+	if (this.ignoreFirst == true) { start = start + interval; }
+	for (var d = start; d <= range.upper; d += interval) {
+		this.values[i] = d;
+		i += 1;
+	}
+	return this.values;
+};
+
+var TickOptions = function() {
+	this.length = 0.075;
+	this.thickness = 1.0;
+	this.count  = 10;
+};
+
+
+/***********************************************************
+ * Axis Labels
+ ***********************************************************/
+var AxisLabel = function() {
+	this.color = 0x7e7e7e;
+	//this.font = "helvetiker";
+	this.font = "Arial";
+	this.size = 0.10;
+	this.width  = 0;
+	this.height = 11;
+	this.style = "normal";
+	this.weight = "normal";
+	this.material = null;
+	this.canvas = null;
+	this.context = null;
+	this.fillstyle = "#000000";
+	this.init();
+}
+
+AxisLabel.prototype.init = function() {
+	this.canvas  = document.createElement('canvas');
+	this.context = this.canvas.getContext('2d');
+	this.context.fillStyle = this.fillstyle;
+	this.context.textAlign = "center";
+	this.context.textBaseline = "middle";
+	this.context.font = "Bold " + this.height + "px " + this.font;
+};
+
+AxisLabel.prototype.getText = function(text, position) {
+
+	var metrics = this.context.measureText(text);
+	this.width  = metrics.width*1.2;
+
+	this.canvas.width  = this.width*2;
+	this.canvas.height = this.height;
+	this.context.fillText(text, this.width/2-1, this.height-1);
+
+	var texture = new THREE.Texture(this.canvas);
+	texture.needsUpdate = true;
+	
+	//var spriteAlign = THREE.SpriteAlignment.topLeft;
+	var material = new THREE.SpriteMaterial( { map: texture, useScreenCoordinates: false});
+	var sprite = new THREE.Sprite(material);
+	var scale  = this.width/this.height * this.size;
+	sprite.scale.set(scale, this.size, 1);
+	sprite.position.set(position.x, position.y, position.z);
+
+	var textObject = new THREE.Object3D(); 
+	textObject.textHeight = this.size;
+	textObject.textWidth  = (this.width/this.height) * this.size;
+	textObject.add(sprite);
+
+	return textObject;
 };
 

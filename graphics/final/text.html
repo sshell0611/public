@@ -38,7 +38,7 @@
 
 				// CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
 
-				//var renderer = new THREE.WebGLRenderer( { alpha: true } );
+				//var renderer = new THREE.WebGLRenderer( { alpha: true, antialias: true } );
 				var renderer = new THREE.CanvasRenderer( { alpha: true } );
 				renderer.setSize(600, 600);
 				renderer.shadowMapEnabled = true;
@@ -84,67 +84,77 @@
 <script src="HammerVis.js"></script>
 <script>
 
-		function CreateLineSeries() {
 
-			var series = new Series("Test", "line");
+		function addText(position, text) {
 
-			var pts = [
-					/*new SeriesPoint(-2.25, -1.3664),
-					new SeriesPoint(-1.75, -1.28102),
-					new SeriesPoint(-1.25, -0.96416),
-					new SeriesPoint(-0.75, -0.78718),
-					new SeriesPoint(-0.25, -0.52714),
-					new SeriesPoint(0.25, -0.10292),
-					new SeriesPoint(0.75,  0.35665),
-					new SeriesPoint(1.25,   0.77143),
-					new SeriesPoint(1.75,  1.45215),
-					new SeriesPoint(2.25,   1.92819)*/
-					/*new SeriesPoint(1, 12.77),
-					new SeriesPoint(2, 13.51),
-					new SeriesPoint(3, 14.00),
-					new SeriesPoint(4 ,14.27),
-					new SeriesPoint(5 ,14.67),
-					new SeriesPoint(6 ,15.34),
-					new SeriesPoint(7 ,16.05),
-					new SeriesPoint(8 ,16.70),
-					new SeriesPoint(9 ,17.76),
-					new SeriesPoint(10,18.50)*/
-					new SeriesPoint(30, 12.77),
-					new SeriesPoint(60, 13.51),
-					new SeriesPoint(91, 14.00),
-					new SeriesPoint(122,14.27),
-					new SeriesPoint(152,14.67),
-					new SeriesPoint(182,15.34),
-					new SeriesPoint(273,16.05),
-					new SeriesPoint(365,16.70)
-					/*new SeriesPoint(547,17.76),
-					new SeriesPoint(730,18.50)*/
-			];
+			var canvas,  
+				context, 
+				metrics = null,
+				textHeight = 10,
+				textWidth = 0,
+				actualFontSize = 0.10;
 
-			series.addPoints(pts);
-			return series;
+			canvas  = document.createElement('canvas');
+			context = canvas.getContext('2d');
+			context.fillStyle = '#FF0000';
+
+
+			metrics = context.measureText(text);
+			console.log(metrics);
+			var textWidth = metrics.width;
+
+			console.log(textWidth + ", " + textHeight);
+
+			canvas.width  = textWidth;
+			canvas.height = textHeight;
+
+			console.log(canvas);
+
+			context.font = "normal " + textHeight + "px Tahoma";
+			context.textAlign = "center";
+			context.textBaseline = "middle";
+			context.fillStyle = "#000000"
+			context.fillText(text, textWidth/2, textHeight/2);
+
+			var texture = new THREE.Texture(canvas);
+			texture.needsUpdate = true;
+			var material = new THREE.SpriteMaterial( { map: texture, useScreenCoordinates: false});
+			var sprite = new THREE.Sprite(material);
+
+			var textObject = new THREE.Object3D();
+			textObject.textHeight = actualFontSize;
+			textObject.textWidth  = (textWidth/textHeight) * textObject.textHeight;
+
+			var wscale = textWidth/textHeight*actualFontSize;
+			console.log('Font size: ' + actualFontSize);
+			console.log('Scale: ' + wscale);
+			//sprite.scale.set(textWidth/textHeight*actualFontSize, actualFontSize, 0);
+			sprite.scale.set(wscale,actualFontSize,0);
+			sprite.position.set(position.x, position.y, position.z);
+
+			textObject.add(sprite);
+			return textObject;
 		}
-
 
 		function Scene1() {
 
-		var lineChart, ambLight, light;
-		var center = new THREE.Vector2(-1, 1);
-		var sz = new THREE.Vector2(4.5, 3.5);
-		var series = CreateLineSeries();
+
 
 		//setup
 		this.setup = function() {
 
-			ambLight = new THREE.AmbientLight(0x666666);
-			light = new THREE.DirectionalLight(0xffffff);
-			light.position.set(1,1,1).normalize();
-			this.scene.add(light);
+			var poz  = new THREE.Vector3(1, 1, 0);
+			var text = addText(poz, "350");
+			this.scene.add(text);
 
-			lineChart = new Chart('line', center, sz);
-			lineChart.yAxis.padding = 1.0;
-			lineChart.addSeries(series);
-			lineChart.render(this.scene);
+			poz  = new THREE.Vector3(0.5, 1, 0);
+			var text2 = addText(poz, "300");
+			this.scene.add(text2);
+
+
+			//console.log(text.position);
+
+
 
 		}
 

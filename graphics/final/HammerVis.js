@@ -2,6 +2,18 @@
 //
 var HAMMER = HAMMER || {};
 
+
+function guid(){
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+	        var r = (d + Math.random()*16)%16 | 0;
+	        d = Math.floor(d/16);
+	        return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+	    });
+    return uuid;
+};
+
+
 /***********************************************************
  * Chart 
  ***********************************************************/
@@ -19,11 +31,9 @@ var Chart = function(type, loc, sz) {
 	this.screenRangeX = null;
 	this.screenRangeY = null;
 	this.margin = 0.20;
-
+	this.objects = [];
+	this.objectMap = {};
 	console.log('chart created');
-
-	//border
-	//backcolor
 	this.init(type, loc, sz);
 }
 
@@ -73,6 +83,51 @@ Chart.prototype = {
 
 		getMargin: function() {
 			return this.margin;	
+		},
+
+		getObjects: function() {
+			return this.objects;	
+		},
+
+		addObject: function(obj, uid) {
+			var len = this.objects.length;
+			this.objects.push(obj);
+			this.objectMap[len] = uid;
+		},
+
+		onObjectClicked: function(idx) {
+			if (idx < this.objects.length) {
+				var uid = this.objectMap[idx];
+				//console.log(uid);
+				for (s = 0; s < this.series.length; ++s) {
+
+					for (p = 0; p < this.series[s].points.length; ++p) {
+					
+						var pt = this.series[s].points[p];
+						var on = (pt.guid == uid);
+						pt.onSelected(on);
+					}
+
+					/*
+					var pt = this.series[s].findPoint(uid);
+					console.log(pt);
+					if (pt !== null){
+						pt.selected = true;
+						console.log('foundpoint')	;
+					}*/
+				}
+			}
+		},
+
+		onClick: function() {
+			
+			for (s = 0; s < this.series.length; ++s) {
+				for (p = 0; p < this.series[s].points.length; ++p) {
+					var pt = this.series[s].points[p];
+					pt.clearFormatting();
+				}
+			}
+	
 		},
 
 		_globalDataRangeX: function() {
@@ -232,18 +287,6 @@ LineEvolutionChartRenderer.prototype = {
 		
 		});
 
-		/*seriesArr[s-1].fadeOut(chartOptions, {duration:3000}, function(){ console.log('done fading out');});
-		seriesArr[s].fadeIn(chartOptions, this.animOptions, function() {
-
-			console.log('done fading in' + seriesArr[s].color);
-			s++;
-			console.log(s);
-			if (s < seriesArr.length) {
-				renderer.fadeLoop(s, chartOptions, seriesArr);
-			}
-		
-		});*/
-	
 	},
 
 	draw : function(scene, chart) {
@@ -337,7 +380,7 @@ BubbleChartRenderer.prototype = {
 		for (s = 0; s < chart.series.length; s++) {
 			for (p = 0; p < chart.series[s].numPoints(); p++) {
 				var pt = chart.series[s].getPoint(p);
-				
+
 				var screenPt = pt.clone();
 				screenPt.scale(wFactor);
 
@@ -348,6 +391,8 @@ BubbleChartRenderer.prototype = {
 
 				var mesh = screenPt.getDrawable();
 				scene.add(mesh);
+
+				chart.addObject(mesh, screenPt.guid);
 			}
 		}
 
@@ -564,6 +609,7 @@ var Series = function(name, type) {
 	this.minW = 10000;
 	this.color = "#0000ff";
 	this.cachedDraw = [];
+	this.pointMap = {};
 	this.init();
 	//dictionary <tag, index>
 }
@@ -594,6 +640,7 @@ Series.prototype = {
 			}
 			var len = this.points.length;	
 			this.points[len] = pt;
+			this.pointMap[pt.guid] = len;
 			this._evaluateMaxMin(pt);
 		},
 
@@ -667,6 +714,26 @@ Series.prototype = {
 		},
 		numPoints : function() {
 			return this.points.length;
+		},
+		getObjects : function() {
+			//returns an array of the point meshes
+			var objects = [];
+
+			for (i=0; i < this.points.length; ++i) {
+				objects[i] = this.points[i].getMesh();
+			}
+
+			return objects;	
+		},
+		findPoint : function(uid){
+
+			console.log(this.pointMap);
+
+			var idx = this.pointMap[uid];
+			if (idx < this.points.length){
+				return this.points[idx];
+			}
+			return null;
 		}
 
 };
@@ -781,6 +848,8 @@ var SeriesPoint = function(x, y, type) {
 	this.color = null;
 	this.mesh = null;
 	this.radius = 0.025;
+	this.selected = false;
+	this.guid = "";
 	this.init(x, y, type);
 }
 
@@ -789,7 +858,10 @@ SeriesPoint.prototype = {
 		init : function(x, y, type) {
 			this.arg = x;
 			this.val = y;
+			this.type = type;
 			this.color = "#0000ff";
+			var id = guid();
+			this.guid = id;
 		    if (type !== undefined) this.type = type;
 		},
 
@@ -800,6 +872,7 @@ SeriesPoint.prototype = {
 
 		clone : function() {
 			var cln = new SeriesPoint(this.arg, this.val, this.type);
+			cln.guid = this.guid;
 			cln.color = this.color;
 			cln.tag = this.tag;	
 			cln.mesh = this.mesh;
@@ -814,13 +887,9 @@ SeriesPoint.prototype = {
 			return this.mesh;	
 		},
 
-		/*scale : function(xScale, yScale, wScale) {
-			this.x = this.arg * xScale;
-			this.y = this.val * yScale;
-			if (this.mesh !== null) {
-				this.mesh.position.set(this.x, this.y, 0);
-			}
-		},*/
+		getMesh: function() {
+			return this.mesh;	
+		},
 
 		getVector: function() {
 			return new THREE.Vector3(this.arg, this.val, 0);
@@ -828,6 +897,18 @@ SeriesPoint.prototype = {
 
 		getDrawVector: function() {
 			return new THREE.Vector3(this.x, this.y, 0);
+		},
+
+		onSelected: function(isOn) {
+			this.selected = isOn;
+		},
+
+		animate : function(scene) {
+		
+		},
+
+		clearFormatting: function() {
+		
 		}
 
 };
@@ -837,7 +918,7 @@ SeriesPoint.prototype = {
  * Bubble Point - x, y, w
  ***********************************************************/
 var BubblePoint = function(x, y, w) {
-	SeriesPoint.call(this, x, y);
+	SeriesPoint.call(this, x, y, 'bubble');
 	this.baserad = 0.10;
 	this.type   = "bubble";
 	this.weight = w;
@@ -849,15 +930,18 @@ BubblePoint.prototype = Object.create(SeriesPoint.prototype);
 BubblePoint.prototype.constructor = BubblePoint;
 
 BubblePoint.prototype.init = function() {
+	var id = guid();
+	this.guid = id;
 	var geom = new THREE.SphereGeometry(this.baserad, 32, 32);
 	var mat  = new THREE.MeshPhongMaterial({
 		ambient  : 0,
-		emissive : 0x0000ff,
-		color    : 0x0000ff,
+		emissive : 0x0000ff/*Math.random() * 0xffffff*/,
+		color    : 0x0000ff/*Math.random() * 0xffffff*/,
 		specular : 0x101010,
 		shininess: 50 });
 	this.mesh = new THREE.Mesh(geom, mat);
 	this.mesh.material.shading = THREE.SmoothShading;
+	geom.computeFaceNormals();
 };
 
 BubblePoint.prototype.set = function(arg, val, wt) {
@@ -874,9 +958,6 @@ BubblePoint.prototype.getDrawable =  function() {
 },
 
 BubblePoint.prototype.scale = function(/*xScale, yScale,*/wScale) {
-	//this.x = this.arg * xScale;
-	//this.y = this.val * yScale;
-	//this.mesh.position.set(this.x, this.y, 0);
 	var middle = wScale / 2.0;		//the middle is our base radius
 	//var normW = Math.sqrt(this.weight / wScale);
 	var normW = Math.sqrt(this.weight / middle);
@@ -887,6 +968,7 @@ BubblePoint.prototype.scale = function(/*xScale, yScale,*/wScale) {
 
 BubblePoint.prototype.clone = function() {
 	var cln = new BubblePoint(this.arg, this.val, this.weight);
+	cln.guid = this.guid;
 	cln.type = this.type;
 	cln.color = this.color;
 	cln.tag = this.tag;	
@@ -894,6 +976,22 @@ BubblePoint.prototype.clone = function() {
 	cln.z = this.z;
 	return cln;
 };
+
+BubblePoint.prototype.onSelected = function(isOn) {
+	this.selected = isOn;
+	if (isOn == true) {
+		console.log('onselected=true');
+	}
+	else {
+		console.log('onselected=false');
+		this.mesh.material.opacity = 0.5;
+	}
+};
+
+BubblePoint.prototype.clearFormatting = function() {
+	this.mesh.material.opacity = 1.0;
+};
+
 
 /***********************************************************
  * Tickmarks

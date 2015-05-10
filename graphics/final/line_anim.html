@@ -126,7 +126,18 @@
 							new SeriesPoint(365,17.70)
 					];
 			}
-
+			else if (num == 4){ 
+					pts = [
+							new SeriesPoint(30, 13.99),
+							new SeriesPoint(60, 14.21),
+							new SeriesPoint(91, 14.00),
+							new SeriesPoint(122,15.87),
+							new SeriesPoint(152,15.97),
+							new SeriesPoint(182,16.84),
+							new SeriesPoint(273,17.55),
+							new SeriesPoint(365,18.00)
+					];
+			}
 
 			series.addPoints(pts);
 			return series;
@@ -141,6 +152,7 @@
 		var series  = CreateLineSeries(1);
 		var series2 = CreateLineSeries(2); 
 		var series3 = CreateLineSeries(3); 
+		var series4 = CreateLineSeries(4); 
 
 		//setup
 		this.setup = function() {
@@ -155,6 +167,7 @@
 			lineChart.addSeries(series);
 			lineChart.addSeries(series2);
 			lineChart.addSeries(series3);
+			lineChart.addSeries(series4);
 			lineChart.render(this.scene);
 
 		}

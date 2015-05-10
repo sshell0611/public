@@ -16,23 +16,26 @@
 		window.SimpleScene = function() {
 				this.init = function(name) {
 				this.scene = new THREE.Scene();
+				this.renderer = new THREE.WebGLRenderer( { alpha: true } );
+				//this.renderer.setSize(600, 600);
+				this.renderer.setSize(window.innerWidth, window.innerHeight);
+				this.renderer.shadowMapEnabled = true;
 
 				// CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
 
-				var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+				this.camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 2000);
 				//camera.position.y = 0.8; 
-				camera.position.z = 5;
-				this.scene.add(camera);
+				this.camera.position.z = 5;
+				this.scene.add(this.camera);
+				this.camera.lookAt(this.scene.position)
 
 				// CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
 
-				var renderer = new THREE.WebGLRenderer( { alpha: true } );
 				//var renderer = new THREE.CanvasRenderer( { alpha: true } );
-				renderer.setSize(600, 600);
-				renderer.shadowMapEnabled = true;
-				//renderer.gammaInput = true;
-				//renderer.gammaOutput = true;
-				document.getElementById(name).appendChild(renderer.domElement);
+
+				document.getElementById(name).appendChild(this.renderer.domElement);
+				document.addEventListener('mousedown', onMouseDown, false);
+				document.addEventListener('mousemove', onMouseMove, false);
 
 				// CALL THE USER'S SETUP FUNCTION JUST ONCE.
 
@@ -44,8 +47,7 @@
 				(function tick() {
 					time = (new Date().getTime()) / 1000;
 					that.update();
-					renderer.render(that.scene, camera);
-					//renderer.setClearColor(that.scene.fog.color);
+					that.renderer.render(that.scene, that.camera);
 					requestAnimationFrame(tick);
 				})();
 			}
@@ -72,6 +74,14 @@
 <script src="HammerVis.js"></script>
 <script>
 
+		Scene1.prototype = new SimpleScene;
+		//var scene1 = new Scene1().init('Scene1_id');
+		var scene1 = new Scene1();
+		scene1.init('Scene1_id');
+
+		var raycaster = new THREE.Raycaster();
+		var mouse = new THREE.Vector2();
+
 		function CreateBubbleSeries() {
 
 			var series = new Series("Test", "bubble");
@@ -89,41 +99,77 @@
 			return series;
 		}
 
+		function onMouseDown(event) {
+
+			event.preventDefault();
+
+			var w = scene1.renderer.domElement.width;
+			var h = scene1.renderer.domElement.height;
+			//var w = window.innerWidth;
+			//var h = window.innerHeight;
+
+			mouse.x = (event.clientX / w) * 2 - 1;
+			mouse.y = - (event.clientY / h) * 2 + 1 - .08;
+
+			console.log('x: ' + mouse.x + ', y: ' + mouse.y);
+			console.log('x: ' + event.clientX + ', y: ' + event.clientY);
+			console.log('h: ' + h + ', w: ' + w);
+
+			raycaster.setFromCamera(mouse, scene1.camera);
+
+			var objects = scene1.bubbleChart.getObjects();
+
+			var num = 0;
+			for (i=0; i<objects.length;++i) {
+				var intersects = raycaster.intersectObject(objects[i]);
+				if (intersects.length > 0) {
+					num++;
+					//obj.object.material.color.setHex(0xff0000);
+					scene1.bubbleChart.onObjectClicked(i);
+				}
+			}
+
+			if (num == 0) {
+				scene1.bubbleChart.onClick();
+			}
+		}
+
+		function onMouseMove(event) {
+
+		}
 
 		function Scene1() {
 
-		var bubbleChart, ambLight, light;
-		var center = new THREE.Vector2(-1, 1);
-		var sz = new THREE.Vector2(4.5, 3.5);
-		var series = CreateBubbleSeries();
 
-		//setup
-		this.setup = function() {
 
-			ambLight = new THREE.AmbientLight(0x666666);
-			light = new THREE.DirectionalLight(0xffffff);
-			light.position.set(1,1,1).normalize();
-			this.scene.add(light);
+				var ambLight, light;
+				var center = new THREE.Vector2(0,0);
+				var sz = new THREE.Vector2(4.5, 3.5);
+				series = CreateBubbleSeries();
 
-			bubbleChart = new Chart('bubble', center, sz);
-			bubbleChart.yAxis.padding = 1.0;
-			bubbleChart.xAxis.padding = 1.0;
-			bubbleChart.addSeries(series);
-			bubbleChart.render(this.scene);
+				//setup
+				this.setup = function() {
 
+					ambLight = new THREE.AmbientLight(0x666666);
+					light = new THREE.DirectionalLight(0xffffff);
+					light.position.set(1,1,1).normalize();
+					this.scene.add(light);
+
+					this.bubbleChart = new Chart('bubble', center, sz);
+					this.bubbleChart.yAxis.padding = 1.0;
+					this.bubbleChart.xAxis.padding = 1.0;
+					this.bubbleChart.addSeries(series);
+					this.bubbleChart.render(this.scene);
+
+				}
+
+				//updates each frame
+				this.update = function() {
+
+					//chart.update()
+
+				}
 		}
-
-		//updates each frame
-		this.update = function() {
-
-				//chart.update()
-
-		}
-
-		}//functionScene1
-
-		Scene1.prototype = new SimpleScene;
-		new Scene1().init('Scene1_id');
 
 
 </script>

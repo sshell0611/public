@@ -18,7 +18,7 @@ function guid(){
  * Chart 
  ***********************************************************/
 //position and size
-var Chart = function(type, loc, sz) {
+var Chart = function(type, loc, sz, scene) {
 	this.chartType = type;
 	this.loc   = loc; 	//vector2 of upper left corner
 	this.size  = sz;		//vector2 of size
@@ -26,20 +26,21 @@ var Chart = function(type, loc, sz) {
 	this.yAxis = null;
 	this.border = null;
 	this.series = [];
-	this.factory = null;
+	this.renderer = null;
 	this.borderEps = 0.15;
 	this.screenRangeX = null;
 	this.screenRangeY = null;
 	this.margin = 0.20;
 	this.objects = [];
 	this.objectMap = {};
+	this.sceneRef = null;
 	console.log('chart created');
-	this.init(type, loc, sz);
+	this.init(type, loc, sz, scene);
 }
 
 Chart.prototype = {
 		
-		init : function(type, loc, sz) {
+		init : function(type, loc, sz, scene) {
 			this.chartType = type;
 			this.loc = loc;
 			this.size = sz;
@@ -48,6 +49,7 @@ Chart.prototype = {
 			this.screenRangeY = new AxisRange(-sz.y/2+this.margin, sz.y/2-this.margin);
 			this.yAxis = new Axis('vertical', this);
 			this.xAxis = new Axis('horizontal', this);
+			if (scene !== 'undefined') { this.sceneRef = scene; }
 			//hack for now
 			if (this.chartType.indexOf("line") > -1) {
 				this.yAxis.onlypositive = true;
@@ -55,7 +57,8 @@ Chart.prototype = {
 				this.xAxis.onlypositive = true;
 				this.xAxis.tickmarks.ignoreFirst = true;
 			}
-			this.factory = new ChartRendererFactory();
+			var factory = new ChartRendererFactory();
+			this.renderer = factory.createRenderer(this.chartType);
 		},
 
 		createBorder : function () {
@@ -96,38 +99,20 @@ Chart.prototype = {
 		},
 
 		onObjectClicked: function(idx) {
-			if (idx < this.objects.length) {
-				var uid = this.objectMap[idx];
-				//console.log(uid);
-				for (s = 0; s < this.series.length; ++s) {
+	
+			this.renderer.onObjectClicked(this, idx);
 
-					for (p = 0; p < this.series[s].points.length; ++p) {
-					
-						var pt = this.series[s].points[p];
-						var on = (pt.guid == uid);
-						pt.onSelected(on);
-					}
-
-					/*
-					var pt = this.series[s].findPoint(uid);
-					console.log(pt);
-					if (pt !== null){
-						pt.selected = true;
-						console.log('foundpoint')	;
-					}*/
-				}
-			}
 		},
 
 		onClick: function() {
-			
-			for (s = 0; s < this.series.length; ++s) {
+
+			this.renderer.onClick(this);
+			/*for (s = 0; s < this.series.length; ++s) {
 				for (p = 0; p < this.series[s].points.length; ++p) {
 					var pt = this.series[s].points[p];
 					pt.clearFormatting();
 				}
-			}
-	
+			}*/
 		},
 
 		_globalDataRangeX: function() {
@@ -161,9 +146,6 @@ Chart.prototype = {
 
 		render : function (scene) {
 
-			//we will have different renderers based on the chart type - factory will return
-			var renderer = this.factory.createRenderer(this.chartType);
-
 			//we will have multiple series so have to find overall max/min
 			var xRng = this._globalDataRangeX(); 
 			var yRng = this._globalDataRangeY();
@@ -171,7 +153,7 @@ Chart.prototype = {
 			this.xAxis.setDataRange(xRng);
 			this.yAxis.setDataRange(yRng);
 
-			renderer.draw(scene, this);
+			this.renderer.draw(scene, this);
 		}
 };
 
@@ -245,9 +227,16 @@ LineChartRenderer.prototype = {
 			var line = new THREE.Line(geometry, material);
 			scene.add(line);
 		}
-
-
 	},
+
+	onObjectClicked : function(chart, idx) {
+	
+	},
+
+	onClick : function(chart) {
+	
+	}
+
 
 }
 
@@ -318,20 +307,16 @@ LineEvolutionChartRenderer.prototype = {
 
 			this.fadeLoop(1, options, chart.series);
 		}
-
-
-		/*
-		for (s = 0; s < chart.series.length; s++) {
-
-			var series = chart.series[s];
-
-
-			series.fadeIn(options);
-			//series.fadeOut(options);
-		}*/
-
-
 	},
+
+	onObjectClicked : function(chart, idx) {
+	
+	},
+
+	onClick : function(chart) {
+	
+	}
+
 }
 
 /***********************************************************
@@ -369,13 +354,7 @@ BubbleChartRenderer.prototype = {
 		var xScreenRng = chart.getScreenRange('horizontal');
 		var yScreenRng = chart.getScreenRange('vertical');
 
-		//xFactor = chart.xAxis.getScaleFactor();
-		//yFactor = chart.yAxis.getScaleFactor();
-
 		wFactor = this._globalWeightFactor(chart);
-
-		//console.log('x scale factor: ' + xFactor);
-		//console.log('y scale factor: ' + yFactor);
 
 		for (s = 0; s < chart.series.length; s++) {
 			for (p = 0; p < chart.series[s].numPoints(); p++) {
@@ -395,8 +374,49 @@ BubbleChartRenderer.prototype = {
 				chart.addObject(mesh, screenPt.guid);
 			}
 		}
-
 	},
+
+	onObjectClicked : function(chart, idx) {
+
+		var scene = chart.sceneRef;
+
+		if (idx < chart.objects.length) {
+		var uid = chart.objectMap[idx];
+			//console.log(uid);
+			for (s = 0; s < chart.series.length; ++s) {
+
+				for (var p = 0; p < chart.series[s].points.length; ++p) {
+					
+					var pt = chart.series[s].points[p];
+					var on = (pt.guid == uid);
+					pt.onSelected(on, chart);
+				}
+			}
+		}
+	},
+
+	onClick: function(chart) {
+
+		for (s = 0; s < chart.series.length; ++s) {
+			for (p = 0; p < chart.series[s].points.length; ++p) {
+				var pt = chart.series[s].points[p];
+				pt.clearFormatting();
+			}
+		}
+
+		var scene = chart.sceneRef;		
+		var toRemove = [];
+		for (var c=0; c < scene.children.length; ++c) { 
+			var name = scene.children[c].name;
+			if (name == 'temporary') {
+				var obj = scene.children[c];
+				toRemove.push(obj);
+			}
+		}
+		for (var i=0; i < toRemove.length; ++i) {
+			scene.remove(toRemove[i]);
+		}
+	}
 
 }
 
@@ -899,7 +919,7 @@ SeriesPoint.prototype = {
 			return new THREE.Vector3(this.x, this.y, 0);
 		},
 
-		onSelected: function(isOn) {
+		onSelected: function(isOn, chartRef) {
 			this.selected = isOn;
 		},
 
@@ -923,6 +943,8 @@ var BubblePoint = function(x, y, w) {
 	this.type   = "bubble";
 	this.weight = w;
 	this.z = w;		//this is the scaled value
+	this.history = [];
+	this.histSpline = null;
 	this.init();
 }
 
@@ -961,7 +983,6 @@ BubblePoint.prototype.scale = function(/*xScale, yScale,*/wScale) {
 	var middle = wScale / 2.0;		//the middle is our base radius
 	//var normW = Math.sqrt(this.weight / wScale);
 	var normW = Math.sqrt(this.weight / middle);
-	console.log(normW);
 	this.z = normW;
 	this.mesh.scale.set(normW, normW, normW);
 };
@@ -974,13 +995,16 @@ BubblePoint.prototype.clone = function() {
 	cln.tag = this.tag;	
 	cln.mesh = this.mesh;
 	cln.z = this.z;
+	cln.history = this.history;
 	return cln;
 };
 
-BubblePoint.prototype.onSelected = function(isOn) {
+BubblePoint.prototype.onSelected = function(isOn, chart) {
 	this.selected = isOn;
 	if (isOn == true) {
-		console.log('onselected=true');
+		this.animateHistory(chart);
+		//console.log('onselected=true: ' + this.guid);
+		//console.log(this.history);
 	}
 	else {
 		console.log('onselected=false');
@@ -988,10 +1012,58 @@ BubblePoint.prototype.onSelected = function(isOn) {
 	}
 };
 
+BubblePoint.prototype.animateHistory = function(chart) {
+	if (this.history.length > 0) {
+
+		try {
+				var scene = chart.sceneRef;
+				var xScreenRng = chart.getScreenRange('horizontal');
+				var yScreenRng = chart.getScreenRange('vertical');
+
+				//wFactor = this._globalWeightFactor(chart);
+
+				var vecarr = [];
+				for (var p = 0; p < this.history.length; p++) {
+
+					var pt = this.history[p];
+					var screenPt = pt.clone();
+					//screenPt.scale(wFactor);
+
+					var x = chart.xAxis.convertPointToScreen(xScreenRng, pt.arg);
+					var y = chart.yAxis.convertPointToScreen(yScreenRng, pt.val);
+
+					screenPt.set(x, y);
+
+					var vec = screenPt.getVector();
+					vecarr[p] = vec;
+
+					//scene.add(mesh);
+					//chart.addObject(mesh, screenPt.guid);
+				}
+
+				var	curve = new THREE.SplineCurve(vecarr);
+				var path  = new THREE.Path(curve.getPoints(50));
+				var geom  = path.createPointsGeometry(5);
+				//this is a hack for some reason it's closing the loop
+				geom.vertices.splice(geom.vertices.length-1,1);
+				var mater = new THREE.LineBasicMaterial( { color: 0x696969, linewidth:2, opacity:0.75 });
+				var spline = new THREE.Line(geom, mater);
+				spline.name = 'temporary';
+				scene.add(spline);
+		}
+		catch (err) {
+			console.log(err.message);
+		}
+	}
+};
+
 BubblePoint.prototype.clearFormatting = function() {
 	this.mesh.material.opacity = 1.0;
 };
 
+BubblePoint.prototype.setHistory = function(arr) {
+	this.history = arr;
+};
 
 /***********************************************************
  * Tickmarks

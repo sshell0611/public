@@ -16,7 +16,8 @@
 		window.SimpleScene = function() {
 				this.init = function(name) {
 				this.scene = new THREE.Scene();
-				this.renderer = new THREE.WebGLRenderer( { alpha: true } );
+				this.renderer = new THREE.CanvasRenderer( { alpha: true } );
+				//this.renderer = new THREE.WebGLRenderer( { alpha: true } );
 				//this.renderer.setSize(600, 600);
 				this.renderer.setSize(window.innerWidth, window.innerHeight);
 				this.renderer.shadowMapEnabled = true;
@@ -31,7 +32,6 @@
 
 				// CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
 
-				//var renderer = new THREE.CanvasRenderer( { alpha: true } );
 
 				document.getElementById(name).appendChild(this.renderer.domElement);
 				document.addEventListener('mousedown', onMouseDown, false);
@@ -82,6 +82,20 @@
 		var raycaster = new THREE.Raycaster();
 		var mouse = new THREE.Vector2();
 
+		function CreateHistory() {
+
+			var pts = [
+					new BubblePoint( 0.0 , 0.0 ,  0.3 ),
+					new BubblePoint(-0.4 ,-0.2 ,  0.5 ),
+					new BubblePoint(-0.7 ,-0.3 ,  1.2 ),
+					new BubblePoint(-0.5 ,-1.1 ,  1.0 ),
+					new BubblePoint(-0.8 ,-1.5 ,  1.75),
+					new BubblePoint(-1.0 ,-2.0 ,  2.0 )
+			];
+
+			return pts;
+		}
+
 		function CreateBubbleSeries() {
 
 			var series = new Series("Test", "bubble");
@@ -95,9 +109,12 @@
 					new BubblePoint( 0.1 , 0.25,  0.5 )
 			];
 
+			pts[2].setHistory(CreateHistory());
+
 			series.addPoints(pts);
 			return series;
 		}
+
 
 		function onMouseDown(event) {
 
@@ -140,8 +157,6 @@
 
 		function Scene1() {
 
-
-
 				var ambLight, light;
 				var center = new THREE.Vector2(0,0);
 				var sz = new THREE.Vector2(4.5, 3.5);
@@ -155,7 +170,7 @@
 					light.position.set(1,1,1).normalize();
 					this.scene.add(light);
 
-					this.bubbleChart = new Chart('bubble', center, sz);
+					this.bubbleChart = new Chart('bubble', center, sz, this.scene);
 					this.bubbleChart.yAxis.padding = 1.0;
 					this.bubbleChart.xAxis.padding = 1.0;
 					this.bubbleChart.addSeries(series);

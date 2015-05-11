@@ -16,8 +16,8 @@
 		window.SimpleScene = function() {
 				this.init = function(name) {
 				this.scene = new THREE.Scene();
-				this.renderer = new THREE.CanvasRenderer( { alpha: true } );
-				//this.renderer = new THREE.WebGLRenderer( { alpha: true } );
+				//this.renderer = new THREE.CanvasRenderer( { alpha: true } );
+				this.renderer = new THREE.WebGLRenderer( { alpha: true } );
 				//this.renderer.setSize(600, 600);
 				this.renderer.setSize(window.innerWidth, window.innerHeight);
 				this.renderer.shadowMapEnabled = true;

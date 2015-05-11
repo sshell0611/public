@@ -907,6 +907,10 @@ SeriesPoint.prototype = {
 			return this.mesh;	
 		},
 
+		getDrawableAlt: function() {
+			return this.mesh;	
+		},
+
 		getMesh: function() {
 			return this.mesh;	
 		},
@@ -938,20 +942,24 @@ SeriesPoint.prototype = {
  * Bubble Point - x, y, w
  ***********************************************************/
 var BubblePoint = function(x, y, w) {
-	SeriesPoint.call(this, x, y, 'bubble');
+	//SeriesPoint.call(this, x, y, w);
 	this.baserad = 0.10;
 	this.type   = "bubble";
 	this.weight = w;
+	this.scaleRef = 1.0;
 	this.z = w;		//this is the scaled value
 	this.history = [];
 	this.histSpline = null;
-	this.init();
+	this.init(x, y, w);
 }
 
 BubblePoint.prototype = Object.create(SeriesPoint.prototype);
 BubblePoint.prototype.constructor = BubblePoint;
 
-BubblePoint.prototype.init = function() {
+BubblePoint.prototype.init = function(x, y, w) {
+	this.arg = x;
+	this.val = y;
+	this.weight = w;
 	var id = guid();
 	this.guid = id;
 	var geom = new THREE.SphereGeometry(this.baserad, 32, 32);
@@ -977,10 +985,28 @@ BubblePoint.prototype.set = function(arg, val, wt) {
 BubblePoint.prototype.getDrawable =  function() {
 	this.mesh.position.set(this.arg, this.val, 0);
 	return this.mesh;	
-},
+};
+
+BubblePoint.prototype.getDrawableAlt = function() {
+	console.log(this.weight);
+	var altmesh = this.mesh;	
+	var mat  = new THREE.MeshPhongMaterial({
+		ambient  : 0,
+		emissive : 0x7e7e7e,
+		color    : 0x7e7e7e,
+		//specular : 0x101010,
+		opacity	 : 1.0});
+	altmesh.material = mat;
+	altmesh.position.set(this.arg, this.val, 0);
+	var normW = Math.sqrt(this.weight/this.scaleRef);
+	this.z = normW;
+	altmesh.scale.set(normW, normW, normW);
+	return altmesh;
+};
 
 BubblePoint.prototype.scale = function(/*xScale, yScale,*/wScale) {
 	var middle = wScale / 2.0;		//the middle is our base radius
+	this.scaleRef = middle;
 	//var normW = Math.sqrt(this.weight / wScale);
 	var normW = Math.sqrt(this.weight / middle);
 	this.z = normW;
@@ -989,6 +1015,7 @@ BubblePoint.prototype.scale = function(/*xScale, yScale,*/wScale) {
 
 BubblePoint.prototype.clone = function() {
 	var cln = new BubblePoint(this.arg, this.val, this.weight);
+	cln.weight = this.weight;
 	cln.guid = this.guid;
 	cln.type = this.type;
 	cln.color = this.color;
@@ -996,6 +1023,7 @@ BubblePoint.prototype.clone = function() {
 	cln.mesh = this.mesh;
 	cln.z = this.z;
 	cln.history = this.history;
+	cln.scaleRef = this.scaleRef;
 	return cln;
 };
 
@@ -1015,45 +1043,69 @@ BubblePoint.prototype.onSelected = function(isOn, chart) {
 BubblePoint.prototype.animateHistory = function(chart) {
 	if (this.history.length > 0) {
 
-		try {
-				var scene = chart.sceneRef;
-				var xScreenRng = chart.getScreenRange('horizontal');
-				var yScreenRng = chart.getScreenRange('vertical');
+		var scene = chart.sceneRef;
+		var xScreenRng = chart.getScreenRange('horizontal');
+		var yScreenRng = chart.getScreenRange('vertical');
+		var vecarr = [];
 
-				//wFactor = this._globalWeightFactor(chart);
+		var start = new Date;
+		var count = 0;
+		var p = 1;
+		var duration = 4000;
+		var steps = duration/this.history.length;
+		var history = this.history;
+		var progress = 0;
+		var id = setInterval(function() {
 
-				var vecarr = [];
-				for (var p = 0; p < this.history.length; p++) {
-
-					var pt = this.history[p];
-					var screenPt = pt.clone();
-					//screenPt.scale(wFactor);
-
-					var x = chart.xAxis.convertPointToScreen(xScreenRng, pt.arg);
-					var y = chart.yAxis.convertPointToScreen(yScreenRng, pt.val);
-
-					screenPt.set(x, y);
-
-					var vec = screenPt.getVector();
-					vecarr[p] = vec;
-
-					//scene.add(mesh);
-					//chart.addObject(mesh, screenPt.guid);
+				count = count + steps;
+				if (count == duration) {
+					progress = 1;
+				}
+				if (p >= history.length-1) {
+					progress = 1;
 				}
 
-				var	curve = new THREE.SplineCurve(vecarr);
+				var spt = history[p-1];
+				var ept = history[p];
+				var screenStartPt = spt.clone();
+				var screenEndPt   = ept.clone();
+
+				var x = chart.xAxis.convertPointToScreen(xScreenRng, spt.arg);
+				var y = chart.yAxis.convertPointToScreen(yScreenRng, spt.val);
+				screenStartPt.set(x, y, spt.weight);
+
+				var x = chart.xAxis.convertPointToScreen(xScreenRng, ept.arg);
+				var y = chart.yAxis.convertPointToScreen(yScreenRng, ept.val);
+				screenEndPt.set(x, y, ept.weight);
+
+				var vec1 = screenStartPt.getVector();
+				var vec2 = screenEndPt.getVector();
+
+				var arr = [];
+				arr[0] = vec1; arr[1] = vec2;
+
+				var	curve = new THREE.SplineCurve(arr);
 				var path  = new THREE.Path(curve.getPoints(50));
-				var geom  = path.createPointsGeometry(5);
+				var geom  = path.createPointsGeometry(50);
 				//this is a hack for some reason it's closing the loop
 				geom.vertices.splice(geom.vertices.length-1,1);
 				var mater = new THREE.LineBasicMaterial( { color: 0x696969, linewidth:2, opacity:0.75 });
 				var spline = new THREE.Line(geom, mater);
 				spline.name = 'temporary';
 				scene.add(spline);
-		}
-		catch (err) {
-			console.log(err.message);
-		}
+
+				var mesh = screenStartPt.getDrawableAlt();
+				mesh.name = 'temporary';
+				scene.add(mesh);
+
+				if (progress == 1) {
+					clearInterval(id);	
+				}
+
+				p++;
+
+			}, steps);
+
 	}
 };
 

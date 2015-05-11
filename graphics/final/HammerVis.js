@@ -65,7 +65,7 @@ Chart.prototype = {
 			var geom = new THREE.BoxGeometry(this.size.x+this.borderEps, this.size.y+this.borderEps, 0);
 			var mat  = new THREE.MeshBasicMaterial( { color: 0x7e7e7e} );
 			var cube = new THREE.Mesh(geom, mat);
-			cube.position.set(this.loc.x-this.borderEps, this.loc.y+this.borderEps, 0);
+			//cube.position.set(this.loc.x-this.borderEps, this.loc.y+this.borderEps, 0);
 			this.border = new THREE.EdgesHelper(cube, 0x7e7e7e);
 		},
 
@@ -545,7 +545,7 @@ Axis.prototype = {
 			var material = new THREE.LineBasicMaterial( { color: 0x7e7e7e, linewidth:width});
 
 			var tickValues = this.tickmarks.compute(this.dataRange);
-			console.log(tickValues);
+			//console.log(tickValues);
 			for (i = 0; i < tickValues.length; ++i)	{
 				var geometry = new THREE.Geometry();
 				var tickval  = Number(tickValues[i]).toFixed(2);
@@ -578,7 +578,7 @@ Axis.prototype = {
 
 		setDataRange : function(rng) {
 			this.dataRange = rng;
-			console.log('setDataRange');
+			//console.log('setDataRange');
 			if (this.onlypositive === true) {
 				if (this.type === 'horizontal') {
 					this.dataRange.lower = 0.0;
@@ -747,7 +747,7 @@ Series.prototype = {
 		},
 		findPoint : function(uid){
 
-			console.log(this.pointMap);
+			//console.log(this.pointMap);
 
 			var idx = this.pointMap[uid];
 			if (idx < this.points.length){
@@ -988,7 +988,7 @@ BubblePoint.prototype.getDrawable =  function() {
 };
 
 BubblePoint.prototype.getDrawableAlt = function() {
-	console.log(this.weight);
+	//console.log(this.weight);
 	var altmesh = this.mesh;	
 	var mat  = new THREE.MeshPhongMaterial({
 		ambient  : 0,

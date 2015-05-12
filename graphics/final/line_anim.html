@@ -162,14 +162,14 @@
 		var series4 = CreateLineSeries(4); 
 
 
-		/*var updates = [];
-		Papa.parse("csv/sample.csv", {
+		var updates = [];
+		var filename = "http://sshell0611.github.io/public/graphics/final/csv/sample.csv";
+		Papa.parse(filename, {
 						download:true,
-						complete: function() {
-							callback(updates)	;
+						complete: function(results) {
+							console.log(results);
 						}
 					});
-					*/
 
 		/*var fr = new FileReader();
 		fr.onload = function(file) {

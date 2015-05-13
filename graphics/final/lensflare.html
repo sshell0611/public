@@ -48,7 +48,7 @@
 
 		<script src="js/three.min.js"></script>
 
-		<script src="js/controls/FlyControls.js"></script>
+		<!--<script src="js/controls/FlyControls.js"></script>-->
 
 		<!--<script src="js/libs/stats.min.js"></script>-->
 
@@ -71,29 +71,28 @@
 				// camera
 
 				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 15000 );
-				camera.position.z = 250;
+				camera.position.z = 5;
 
-				controls = new THREE.FlyControls( camera );
+				/*controls = new THREE.FlyControls( camera );
 
 				controls.movementSpeed = 2500;
 				controls.domElement = container;
 				controls.rollSpeed = Math.PI / 6;
 				controls.autoForward = false;
-				controls.dragToLook = false
+				controls.dragToLook = false*/
 
 				// scene
 
 				scene = new THREE.Scene();
 				scene.fog = new THREE.Fog( 0x000000, 3500, 15000 );
-				scene.fog.color.setHSL( 0.51, 0.4, 0.01 );
+				//scene.fog.color.setHSL( 0.51, 0.4, 0.01 );
 
 				// world
 
-				var s = 250;
+				/*var s = 250;
 
 				var cube = new THREE.BoxGeometry( s, s, s );
 				var material = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, shininess: 50 } );
-
 
 				for ( var i = 0; i < 3000; i ++ ) {
 
@@ -112,25 +111,28 @@
 
 					scene.add( mesh );
 
-				}
+				}*/
 
 
 				// lights
 
 				var ambient = new THREE.AmbientLight( 0xffffff );
 				ambient.color.setHSL( 0.1, 0.3, 0.2 );
-				scene.add( ambient );
+				//scene.add( ambient );
 
 
 				var dirLight = new THREE.DirectionalLight( 0xffffff, 0.125 );
 				dirLight.position.set( 0, -1, 0 ).normalize();
-				scene.add( dirLight );
+				//scene.add( dirLight );
 
 				dirLight.color.setHSL( 0.1, 0.7, 0.5 );
 
 				// lens flares
+				//var textureFlare0 = THREE.ImageUtils.loadTexture("http://sshell0611.github.io/public/graphics/final/textures/lensflare/lensflare0.png");
+				//var textureFlare2 = THREE.ImageUtils.loadTexture("http://sshell0611.github.io/public/graphics/final/textures/lensflare/lensflare2.png");
+				//var textureFlare3 = THREE.ImageUtils.loadTexture("http://sshell0611.github.io/public/graphics/final/textures/lensflare/lensflare3.png");
 
-				var textureFlare0 = THREE.ImageUtils.loadTexture( "textures/lensflare/lensflare0.png" );
+				var textureFlare0 = THREE.ImageUtils.loadTexture( "textures/lensflare/lensflare0_alpha.png" );
 				var textureFlare2 = THREE.ImageUtils.loadTexture( "textures/lensflare/lensflare2.png" );
 				var textureFlare3 = THREE.ImageUtils.loadTexture( "textures/lensflare/lensflare3.png" );
 
@@ -140,16 +142,17 @@
 
 				function addLight( h, s, l, x, y, z ) {
 
-					var light = new THREE.PointLight( 0xffffff, 1.5, 4500 );
+					var light = new THREE.PointLight( 0xff0000, 1.5, 4500 );
 					light.color.setHSL( h, s, l );
 					light.position.set( x, y, z );
 					scene.add( light );
 
-					var flareColor = new THREE.Color( 0xffffff );
+					var flareColor = new THREE.Color( 0xff0000 );
 					flareColor.setHSL( h, s, l + 0.5 );
 
-					var lensFlare = new THREE.LensFlare( textureFlare0, 700, 0.0, THREE.AdditiveBlending, flareColor );
+					var lensFlare = new THREE.LensFlare( textureFlare0, 200, 0.0, THREE.AdditiveBlending, flareColor );
 
+					/*
 					lensFlare.add( textureFlare2, 512, 0.0, THREE.AdditiveBlending );
 					lensFlare.add( textureFlare2, 512, 0.0, THREE.AdditiveBlending );
 					lensFlare.add( textureFlare2, 512, 0.0, THREE.AdditiveBlending );
@@ -157,7 +160,7 @@
 					lensFlare.add( textureFlare3, 60, 0.6, THREE.AdditiveBlending );
 					lensFlare.add( textureFlare3, 70, 0.7, THREE.AdditiveBlending );
 					lensFlare.add( textureFlare3, 120, 0.9, THREE.AdditiveBlending );
-					lensFlare.add( textureFlare3, 70, 1.0, THREE.AdditiveBlending );
+					lensFlare.add( textureFlare3, 70, 1.0, THREE.AdditiveBlending );*/
 
 					lensFlare.customUpdateCallback = lensFlareUpdateCallback;
 					lensFlare.position.copy( light.position );
@@ -169,15 +172,15 @@
 				// renderer
 
 				renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
-				renderer.setClearColor( scene.fog.color );
+				//renderer.setClearColor( scene.fog.color );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
 
 				//
 
-				renderer.gammaInput = true;
-				renderer.gammaOutput = true;
+				//renderer.gammaInput = true;
+				//renderer.gammaOutput = true;
 
 				// events
 
@@ -194,11 +197,9 @@
 				var vecX = -object.positionScreen.x * 2;
 				var vecY = -object.positionScreen.y * 2;
 
-
 				for( f = 0; f < fl; f++ ) {
 
 					   flare = object.lensFlares[ f ];
-
 					   flare.x = object.positionScreen.x + vecX * flare.distance;
 					   flare.y = object.positionScreen.y + vecY * flare.distance;
 
@@ -206,9 +207,8 @@
 
 				}
 
-				object.lensFlares[ 2 ].y += 0.025;
-				object.lensFlares[ 3 ].rotation = object.positionScreen.x * 0.5 + THREE.Math.degToRad( 45 );
-
+				//object.lensFlares[ 2 ].y += 0.025;
+				//object.lensFlares[ 3 ].rotation = object.positionScreen.x * 0.5 + THREE.Math.degToRad( 45 );
 			}
 
 			//
@@ -236,7 +236,7 @@
 
 				var delta = clock.getDelta();
 
-				controls.update( delta );
+				//controls.update( delta );
 				renderer.render( scene, camera );
 
 			}

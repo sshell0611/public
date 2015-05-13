@@ -34,6 +34,7 @@ var Chart = function(type, loc, sz, scene) {
 	this.objects = [];
 	this.objectMap = {};
 	this.sceneRef = null;
+	this.dimensionMap = [];
 	console.log('chart created');
 	this.init(type, loc, sz, scene);
 }
@@ -132,7 +133,7 @@ Chart.prototype = {
 		_globalDataRangeY: function() {
 			var min = 10000;
 			var max = -10000;
-			for (s = 0; s < this.series.length; s++)
+			for (var s = 0; s < this.series.length; s++)
 			{
 				yMax = this.series[s].maximumY();
 				yMin = this.series[s].minimumY();
@@ -143,6 +144,40 @@ Chart.prototype = {
 			return new AxisRange(min, max);
 		},
 
+		defineDimension: function(n, def) {
+			this.dimensionMap[n] = def;
+		},
+
+		//hard coded for now
+		getStaticDimensions: function() {
+			if (this.dimensionMap.length == 0) {
+				return null;
+			}
+			return {0:'Texture'};
+		},
+
+		//hard coded for now
+		getDynamicDimensions: function() {
+			if (this.dimensionMap.length < 2) {
+				return null;
+			}
+			return {1:'Rotation'};
+		},
+
+		getDimensionDataRange: function(dim) {
+			var min = 10000;
+			var max = -10000;
+			if (this.dimensionMap.length > dim)	 {
+				for (var s = 0; s < this.series.length; s++) {
+					var dMax = this.series[s].dimensionMax(dim);
+					var dMin = this.series[s].dimensionMin(dim);
+					min = Math.min(dMin, min);
+					max = Math.max(dMax, max);
+				}
+				return new AxisRange(min, max);
+			}
+			return null;
+		},
 
 		render : function (scene) {
 
@@ -154,7 +189,13 @@ Chart.prototype = {
 			this.yAxis.setDataRange(yRng);
 
 			this.renderer.draw(scene, this);
-		}
+		},
+
+		update: function (scene, time){
+		
+			this.renderer.update(scene, this, time);
+		},
+
 };
 
 /***********************************************************
@@ -234,6 +275,10 @@ LineChartRenderer.prototype = {
 	},
 
 	onClick : function(chart) {
+	
+	},
+
+	update : function(scene, chart, time) {
 	
 	}
 
@@ -315,6 +360,10 @@ LineEvolutionChartRenderer.prototype = {
 
 	onClick : function(chart) {
 	
+	},
+
+	update : function(scene, chart, time) {
+	
 	}
 
 }
@@ -355,6 +404,13 @@ BubbleChartRenderer.prototype = {
 		var yScreenRng = chart.getScreenRange('vertical');
 
 		wFactor = this._globalWeightFactor(chart);
+		var staticdim = chart.getStaticDimensions();
+		var dFactor = 1;
+		if (staticdim !== null) {
+			var drng = chart.getDimensionDataRange(0);
+			dFactor = drng.upper - drng.lower;
+			//console.log(drng.upper + " " + drng.lower + " " + dFactor);
+		}
 
 		for (s = 0; s < chart.series.length; s++) {
 			for (p = 0; p < chart.series[s].numPoints(); p++) {
@@ -367,6 +423,10 @@ BubbleChartRenderer.prototype = {
 				var y = chart.yAxis.convertPointToScreen(yScreenRng, pt.val);
 
 				screenPt.set(x, y);
+
+				if (staticdim !== null) {
+					screenPt.applyDimension(0, staticdim[0], dFactor);
+				}
 
 				var mesh = screenPt.getDrawable();
 				scene.add(mesh);
@@ -416,6 +476,26 @@ BubbleChartRenderer.prototype = {
 		for (var i=0; i < toRemove.length; ++i) {
 			scene.remove(toRemove[i]);
 		}
+	},
+
+	update : function(scene, chart, time) {
+
+		var dyndim = chart.getDynamicDimensions();
+		var dFactor = 1;
+		if (dyndim !== null) {
+			var drng = chart.getDimensionDataRange(1);
+			dFactor = drng.upper - drng.lower;
+			//console.log(drng.upper + " " + drng.lower + " " + dFactor);
+			//
+			var objects = chart.getObjects();
+			for (var i = 0; i < objects.length; ++i) {
+				var object = objects[i];	
+				object.rotation.y += 0.15;
+			}
+
+		}
+
+	
 	}
 
 }
@@ -754,6 +834,31 @@ Series.prototype = {
 				return this.points[idx];
 			}
 			return null;
+		},
+
+		dimensionMax : function(d) {
+
+			var max = -10000000;
+			for (var p = 0; p < this.points.length; ++p) {
+				var pt = this.points[p];
+				if (pt.hasDimension(d)) {
+					var val = pt.getDimension(d);
+					max = Math.max(max, val);
+				}
+			}
+			return max;
+		},
+
+		dimensionMin : function(d) {
+			var min = 10000000;
+			for (var p = 0; p < this.points.length; ++p) {
+				var pt = this.points[p];
+				if (pt.hasDimension(d)) {
+					var val = pt.getDimension(d);
+					min = Math.min(min, val);
+				}
+			}
+			return min;
 		}
 
 };
@@ -870,6 +975,7 @@ var SeriesPoint = function(x, y, type) {
 	this.radius = 0.025;
 	this.selected = false;
 	this.guid = "";
+	this.dimensions = [];
 	this.init(x, y, type);
 }
 
@@ -896,6 +1002,7 @@ SeriesPoint.prototype = {
 			cln.color = this.color;
 			cln.tag = this.tag;	
 			cln.mesh = this.mesh;
+			cln.dimensions = this.dimensions;
 			return cln;
 		},
 
@@ -933,9 +1040,28 @@ SeriesPoint.prototype = {
 
 		clearFormatting: function() {
 		
-		}
+		},
 
+		setDimensions: function(arr) {
+			this.dimensions = arr;
+		},
+
+		nDim: function() {
+			return this.dimensions.length;
+		},
+
+		hasDimension: function(dim) {
+			return (this.nDim() > dim);
+		},
+
+		getDimension: function(dim) {
+			return this.dimensions[dim];
+		},
+		applyDimension: function(dnum, name, factor) {
+			console.log('in apply dimension base');
+		}
 };
+
 
 
 /***********************************************************
@@ -943,7 +1069,7 @@ SeriesPoint.prototype = {
  ***********************************************************/
 var BubblePoint = function(x, y, w) {
 	//SeriesPoint.call(this, x, y, w);
-	this.baserad = 0.10;
+	this.baserad = 0.125;
 	this.type   = "bubble";
 	this.weight = w;
 	this.scaleRef = 1.0;
@@ -992,8 +1118,8 @@ BubblePoint.prototype.getDrawableAlt = function() {
 	var altmesh = this.mesh;	
 	var mat  = new THREE.MeshPhongMaterial({
 		ambient  : 0,
-		emissive : 0x7e7e7e,
-		color    : 0x7e7e7e,
+		emissive : 0x7777ff,
+		color    : 0x7777ff,
 		//specular : 0x101010,
 		opacity	 : 1.0});
 	altmesh.material = mat;
@@ -1024,6 +1150,7 @@ BubblePoint.prototype.clone = function() {
 	cln.z = this.z;
 	cln.history = this.history;
 	cln.scaleRef = this.scaleRef;
+	cln.dimensions = this.dimensions;
 	return cln;
 };
 
@@ -1111,6 +1238,52 @@ BubblePoint.prototype.animateHistory = function(chart) {
 
 BubblePoint.prototype.clearFormatting = function() {
 	this.mesh.material.opacity = 1.0;
+};
+
+BubblePoint.prototype.applyDimension = function(dnum, name, factor) {
+
+	if (name == "Texture") {
+		var middle = factor / 2.0;
+		var dim = this.dimensions[dnum] ;
+		var norm = dim / middle;
+
+
+		//just as a test use > 1 and < 1
+		if (norm > 1.0) { 
+			//var img  = THREE.ImageUtils.loadTexture("textures/fire/fire1.jpg");
+			var img  = THREE.ImageUtils.loadTexture("textures/lava/lavatile.jpg");
+			img.repeat.set(4,2);
+			img.wrapS = img.wrapT = THREE.RepeatWrapping;
+			img.anisotropy = 16;
+
+			var mat  = new THREE.MeshPhongMaterial({
+			ambient  : 0,
+			//emissive : 0x0000ff/*Math.random() * 0xffffff*/,
+			color    : 0xff0000/*Math.random() * 0xffffff*/,
+			specular : 0x101010,
+			map		 : img, 
+			shininess: 50 });
+
+		}
+		else {
+
+			var img  = THREE.ImageUtils.loadTexture("textures/planets/moon_1024.jpg");
+			img.repeat.set(4,2);
+			img.wrapS = img.wrapT = THREE.RepeatWrapping;
+			img.anisotropy = 16;
+
+			var mat  = new THREE.MeshPhongMaterial({
+			ambient  : 0,
+			//emissive : 0x0000ff/*Math.random() * 0xffffff*/,
+			color    : 0xffffff/*Math.random() * 0xffffff*/,
+			specular : 0x101010,
+			map		 : img, 
+			shininess: 50 });
+		
+		}
+
+		this.mesh.material = mat;
+	}
 };
 
 BubblePoint.prototype.setHistory = function(arr) {

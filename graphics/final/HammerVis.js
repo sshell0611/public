@@ -93,6 +93,19 @@ Chart.prototype = {
 			return this.objects;	
 		},
 
+		getObject: function (uid) {
+
+			for (var i =0; i < this.objects.length; ++i) {
+
+				var objuid = this.objectMap[i];
+				if (objuid == uid) {
+					return this.objects[i];
+				}
+			}
+		
+			return null;
+		},
+
 		addObject: function(obj, uid) {
 			var len = this.objects.length;
 			this.objects.push(obj);
@@ -412,6 +425,12 @@ BubbleChartRenderer.prototype = {
 			//console.log(drng.upper + " " + drng.lower + " " + dFactor);
 		}
 
+		var dyndim = chart.getDynamicDimensions();
+		var dynRng = null;
+		if (dyndim !== null) {
+			dynRng = chart.getDimensionDataRange(1);
+		}
+
 		for (s = 0; s < chart.series.length; s++) {
 			for (p = 0; p < chart.series[s].numPoints(); p++) {
 				var pt = chart.series[s].getPoint(p);
@@ -425,7 +444,10 @@ BubbleChartRenderer.prototype = {
 				screenPt.set(x, y);
 
 				if (staticdim !== null) {
+					pt.applyDimension(0, staticdim[0], dFactor);
 					screenPt.applyDimension(0, staticdim[0], dFactor);
+					screenPt.applyDimension(1, dyndim[1], dynRng);
+					pt.applyDimension(1, dyndim[1], dynRng);
 				}
 
 				var mesh = screenPt.getDrawable();
@@ -485,13 +507,25 @@ BubbleChartRenderer.prototype = {
 		if (dyndim !== null) {
 			var drng = chart.getDimensionDataRange(1);
 			dFactor = drng.upper - drng.lower;
-			//console.log(drng.upper + " " + drng.lower + " " + dFactor);
-			//
+
+			for (var s = 0; s < chart.series.length; ++s) {
+				for (var p = 0; p < chart.series[s].points.length; ++p) {
+					var pt = chart.series[s].points[p];
+					var uid = pt.guid;
+
+					var object = chart.getObject(uid);
+					if (object !== null) {
+						object.rotation.y += pt.speed;	
+					}
+				}
+			}
+
+			/*
 			var objects = chart.getObjects();
 			for (var i = 0; i < objects.length; ++i) {
 				var object = objects[i];	
-				object.rotation.y += 0.15;
-			}
+				object.rotation.y += 0.005;
+			}*/
 
 		}
 
@@ -1058,7 +1092,6 @@ SeriesPoint.prototype = {
 			return this.dimensions[dim];
 		},
 		applyDimension: function(dnum, name, factor) {
-			console.log('in apply dimension base');
 		}
 };
 
@@ -1069,7 +1102,8 @@ SeriesPoint.prototype = {
  ***********************************************************/
 var BubblePoint = function(x, y, w) {
 	//SeriesPoint.call(this, x, y, w);
-	this.baserad = 0.125;
+	this.baserad = 0.15;
+	this.speed   = 0.0;
 	this.type   = "bubble";
 	this.weight = w;
 	this.scaleRef = 1.0;
@@ -1151,6 +1185,7 @@ BubblePoint.prototype.clone = function() {
 	cln.history = this.history;
 	cln.scaleRef = this.scaleRef;
 	cln.dimensions = this.dimensions;
+	cln.speed = this.speed;
 	return cln;
 };
 
@@ -1283,6 +1318,20 @@ BubblePoint.prototype.applyDimension = function(dnum, name, factor) {
 		}
 
 		this.mesh.material = mat;
+	}
+	else if (name == "Rotation") {
+
+		//factor is actually a range here - hack
+
+		var dim = this.dimensions[dnum];
+		var norm = (dim - factor.lower) / factor.getRange();
+
+		var speedlower = 0.005;
+		var speedRange = 0.095;
+		//max speed = 0.1;
+		//min speed = 0.005;
+	
+		this.speed = norm * speedRange + speedlower;
 	}
 };
 

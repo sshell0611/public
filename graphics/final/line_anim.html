@@ -30,6 +30,7 @@
 		window.SimpleScene = function() {
 				this.init = function(name) {
 				this.scene = new THREE.Scene();
+				this.serieses = [];
 
 				// CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
 
@@ -51,7 +52,8 @@
 
 				// CALL THE USER'S SETUP FUNCTION JUST ONCE.
 
-				this.setup();
+				this.parse();
+				//this.setup();
 
 				// START THE ANIMATION LOOP.
 
@@ -86,6 +88,10 @@
 </table>
 <script src="HammerVis.js"></script>
 <script>
+
+		Scene1.prototype = new SimpleScene;
+		var scene1 = new Scene1();
+		scene1.init('Scene1_id');
 
 		function CreateLineSeries(num) {
 
@@ -145,47 +151,60 @@
 			return series;
 		}
 
-		function parseResults(updates) {
-			console.log('----');
-			console.log(updates);
-			consold.log('----');
-		}
-
 		function Scene1() {
 
 		var lineChart, ambLight, light;
 		var center = new THREE.Vector2(-1, 1);
 		var sz = new THREE.Vector2(4.5, 3.5);
-		var series  = CreateLineSeries(1);
-		var series2 = CreateLineSeries(2); 
-		var series3 = CreateLineSeries(3); 
-		var series4 = CreateLineSeries(4); 
+		//var series  = CreateLineSeries(1);
+		//var series2 = CreateLineSeries(2); 
+		//var series3 = CreateLineSeries(3); 
+		//var series4 = CreateLineSeries(4); 
 
 
-		var updates = [];
 		var filename = "http://sshell0611.github.io/public/graphics/final/csv/spx_vol_hist.csv";
-		Papa.parse(filename, {
-						header:true,
-						download:true,
-						complete: function(results) {
-							console.log(results);
-						}
-					});
+		var results = [];
 
-		/*var fr = new FileReader();
-		fr.onload = function(file) {
-			console.log('here in reader');
+		var that = this;
+		var serieses = [];
+		this.parse = function() {
+
+				Papa.parse(filename, {
+								header:true,
+								download:true,
+								complete: function(results) {
+
+									var headers = results.meta.fields;
+									var data = results.data;
+									//loop through series
+									for (var s = 0; s < data.length-1; ++s) {
+
+										var series = new AnimatedSeries("Test"+s, "line");
+
+										var obj = data[s];
+										var spts = [];
+
+										//loop through points
+										for (var h = 1; h < headers.length; ++h){ 
+											var hdr = Number(headers[h]);
+											var pt  = Number(obj[hdr]);
+
+											spts[h-1] = new SeriesPoint(hdr, pt);
+										}
+
+										series.addPoints(spts);
+										serieses[s] = series;
+									}
+
+									that.setup(serieses);
+								}
+							});
+		
 		}
 
-		var filepath = "csv/sample.csv";
-		$.get(filepath, function(data) {
-						
-			//fr.readAsText(file);
-						
-		})*/
 
 		//setup
-		this.setup = function() {
+		this.setup = function(serieses) {
 
 			ambLight = new THREE.AmbientLight(0x666666);
 			light = new THREE.DirectionalLight(0xffffff);
@@ -194,10 +213,19 @@
 
 			lineChart = new Chart('line_evolution', center, sz);
 			lineChart.yAxis.padding = 1.0;
+
+			for (var i = 0; i < serieses.length; ++i) {
+				
+				lineChart.addSeries(serieses[i]);
+			}
+
+			/*
 			lineChart.addSeries(series);
 			lineChart.addSeries(series2);
 			lineChart.addSeries(series3);
 			lineChart.addSeries(series4);
+			*/
+
 			lineChart.render(this.scene);
 
 		}
@@ -209,8 +237,6 @@
 
 		}//functionScene1
 
-		Scene1.prototype = new SimpleScene;
-		new Scene1().init('Scene1_id');
 
 
 </script>

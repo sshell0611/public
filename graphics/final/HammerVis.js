@@ -984,7 +984,7 @@ AnimatedSeries.prototype.fadeOut = function(choptions, animoptions, callback) {
 		var idx = animoptions.idx;
 		var n = animoptions.n;
 		var t = n - idx;
-		var lam = 0.85;//animoptions.lambda;
+		var lam = 0.25;//animoptions.lambda;
 		var lb = animoptions.lowbound;
 
 		var finalOpac = (c-lb) * Math.exp(-lam * t) + lb;

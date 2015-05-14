@@ -325,7 +325,6 @@ LineEvolutionChartRenderer.prototype = {
 		var len = seriesArr.length;
 		var fadeOutOpts = {duration:2000, idx:s-1, n:len, lambda:0.25, lowbound: 0.1, c:1};
 		var last = (len == s+1);
-		console.log('idx: ' + s + ' len: ' + len + 'last: ' + last);
 
 		seriesArr[s-1].fadeOut(chartOptions, fadeOutOpts, function(){ 
 

@@ -165,6 +165,7 @@
 		var updates = [];
 		var filename = "http://sshell0611.github.io/public/graphics/final/csv/sample.csv";
 		Papa.parse(filename, {
+						header:true,
 						download:true,
 						complete: function(results) {
 							console.log(results);

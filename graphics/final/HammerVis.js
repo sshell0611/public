@@ -317,14 +317,19 @@ LineEvolutionChartRenderer.prototype = {
 
 	fadeLoop: function(idx, chartOptions, seriesArr) {
 
+
 		//draw the first one
 		var renderer = this;
 		var animOptions = this.animOptions;
 		s = idx;
+		var len = seriesArr.length;
+		var fadeOutOpts = {duration:2000, idx:s-1, n:len, lambda:0.25, lowbound: 0.1, c:1};
+		var last = (len == s+1);
+		console.log('idx: ' + s + ' len: ' + len + 'last: ' + last);
 
-		seriesArr[s-1].fadeOut(chartOptions, {duration:2000}, function(){ 
+		seriesArr[s-1].fadeOut(chartOptions, fadeOutOpts, function(){ 
 
-				seriesArr[s].fadeIn(chartOptions, animOptions, function() {
+				seriesArr[s].fadeIn(chartOptions, animOptions, last, function() {
 					s++;
 					if (s < seriesArr.length) {
 						renderer.fadeLoop(s, chartOptions, seriesArr);
@@ -790,6 +795,7 @@ Series.prototype = {
 
 				for (p = 0; p < this.numPoints(); p++) {
 					var pt = this.getPoint(p);
+					pt.color = this.color;
 
 					var screenPt = pt.clone();
 					var x = xAxis.convertPointToScreen(xRange, pt.arg);
@@ -932,7 +938,7 @@ AnimatedSeries.prototype.animate = function(options) {
 			}, options.delay || 10);
 };
 
-AnimatedSeries.prototype.fadeIn = function(choptions, animoptions, callback) {
+AnimatedSeries.prototype.fadeIn = function(choptions, animoptions, lastSeries, callback) {
 
 		var scene = choptions['scene'];
 		var xAxis = choptions['xAxis'];
@@ -954,6 +960,7 @@ AnimatedSeries.prototype.fadeIn = function(choptions, animoptions, callback) {
 				step: function(delta) {
 					var opacity = to + delta;
 					if (first == true) {
+						if (lastSeries == true) { this.series.color = "#ff0000"; }
 						this.series.draw(scene, xAxis, yAxis, xRange, yRange, opacity);
 						first = false;
 					}
@@ -972,8 +979,19 @@ AnimatedSeries.prototype.fadeOut = function(choptions, animoptions, callback) {
 		var xRange = choptions['xRange'];
 		var yRange = choptions['yRange'];
 
+		//duration:2000, idx:s-1, n:len, lambda:0.25, lowbound: 0.1, c:1};
+		//decay function params
+		var c = animoptions.c;
+		var idx = animoptions.idx;
+		var n = animoptions.n;
+		var t = n - idx;
+		var lam = 0.85;//animoptions.lambda;
+		var lb = animoptions.lowbound;
+
+		var finalOpac = (c-lb) * Math.exp(-lam * t) + lb;
 		var to = 1;
 		var first = true;
+		var last = (t == 0);
 		this.animate( {
 		
 				series: this,
@@ -984,7 +1002,9 @@ AnimatedSeries.prototype.fadeOut = function(choptions, animoptions, callback) {
 				},
 				complete: callback,
 				step: function(delta) {
-					var opacity = Math.max(to - delta, 0.1);
+					//delta is a % of time elapsed
+					//var opacity = Math.max(to - delta, lb);
+					var opacity = Math.max(to - delta*(1-finalOpac), lb);
 					if (first == true) {
 						this.series.draw(scene, xAxis, yAxis, xRange, yRange, opacity);
 						first = false;

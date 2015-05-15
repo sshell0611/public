@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+
+<script src="js/three.js"></script>
+<script src="js/renderers/Projector.js"></script>
+<script src="js/renderers/CanvasRenderer.js"></script>
+<script src="fonts/gentilis_bold.typeface.js"></script>
+<script src="fonts/gentilis_regular.typeface.js"></script>
+<script src="fonts/optimer_bold.typeface.js"></script>
+<script src="fonts/optimer_regular.typeface.js"></script>
+<script src="fonts/helvetiker_bold.typeface.js"></script>
+<script src="fonts/helvetiker_regular.typeface.js"></script>
+<script src="fonts/droid/droid_sans_regular.typeface.js"></script>
+<script src="fonts/droid/droid_sans_bold.typeface.js"></script>
+<script src="fonts/droid/droid_serif_regular.typeface.js"></script>
+<script src="fonts/droid/droid_serif_bold.typeface.js"></script>
+<script src="js/papaparse.js"></script>
+<script src="js/jquery-1.11.3.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="HammerVis.js"></script>
+<script src="js/jquery.dataTables.min.js"></script>
+
+	<head>
+		<title>Final Project</title>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<!-- Bootstrap -->
+		<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+
+		<style type="text/css">
+		body {
+		padding-top: 20px;
+		padding-bottom: 40px;
+		}
+
+		/* Custom container */
+		.container-narrow {
+		margin: 0 auto;
+		max-width: 700px;
+		}
+		.container-narrow > hr {
+		margin: 30px 0;
+		}
+
+		/* Main marketing message and sign up button */
+		.jumbotron {
+		margin: 30px 0;
+		text-align: center;
+		}
+		.jumbotron h1 {
+		font-size: 72px;
+		line-height: 1;
+		}
+		.jumbotron .btn {
+		font-size: 21px;
+		padding: 14px 24px;
+		}
+
+		/* Supporting marketing content */
+		.marketing {
+		margin: 60px 0;
+		}
+		.marketing p + h4 {
+		margin-top: 28px;
+		}
+		</style>
+		<link href="css/bootstrap-responsive.css" rel="stylesheet">
+
+	</head>
+
+<body>
+
+<div class="container-narrow">
+
+<div class="masthead">
+<ul class="nav nav-pills pull-right">
+<li class="active"><a href="index.html">Home</a></li>
+</ul>
+<h3 class="muted">Final Project: HammerVis</h3>
+</div>
+
+<hr>
+
+<div class="jumbotron">
+<h4>Project Scope</h4>
+<p>Write about project scope here</p>
+</div>
+
+<script>
+		window.time = 0;
+		window.count = 0;
+		window.SimpleScene = function() {
+				this.init = function(name) {
+				this.scene = new THREE.Scene();
+				this.serieses = [];
+				this.dataset = [];
+
+				// CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
+
+				var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+				camera.position.z = 5;
+				this.scene.add(camera);
+
+				// CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
+				//var renderer = new THREE.WebGLRenderer( { alpha: true } );
+				var renderer = new THREE.CanvasRenderer( { alpha: true } );
+				renderer.setSize(600, 600);
+				renderer.shadowMapEnabled = true;
+				//renderer.gammaInput = true;
+				//renderer.gammaOutput = true;
+				document.getElementById(name).appendChild(renderer.domElement);
+
+				// CALL THE USER'S SETUP FUNCTION JUST ONCE.
+
+				this.parse();
+				//this.setup();
+
+				// START THE ANIMATION LOOP.
+
+				var that = this;
+				(function tick() {
+					time = (new Date().getTime()) / 1000;
+					that.update();
+					renderer.render(that.scene, camera);
+					//renderer.setClearColor(that.scene.fog.color);
+					requestAnimationFrame(tick);
+				})();
+			}
+		};
+</script>
+
+
+<table align="center">
+<tr>
+		<!--<td><b>Volatility<b><td>-->
+	<td id=Scene1_code></td>
+	<td id='Scene1_id'></td>
+</tr>
+</table>
+
+<hr>
+
+<script>
+		Scene1.prototype = new SimpleScene;
+		var scene1 = new Scene1();
+		scene1.init('Scene1_id');
+
+		function Scene1() {
+
+		var lineChart, ambLight, light;
+		var center = new THREE.Vector2(-1, 1);
+		var sz = new THREE.Vector2(4.5, 3.5);
+
+		var filename = "http://sshell0611.github.io/public/graphics/final/csv/spx_vol_hist.csv";
+		var results = [];
+
+		var that = this;
+		var serieses = [];
+		this.parse = function() {
+
+		Papa.parse(filename, {
+						header:true,
+						download:true,
+						complete: function(results) {
+
+							var headers = results.meta.fields;
+							var data = results.data;
+							//loop through series
+							for (var s = 0; s < data.length-1; ++s) {
+
+								var row = [];
+
+								var series = new AnimatedSeries("Test"+s, "line");
+
+								var obj = data[s];
+								var spts = [];
+								
+								row[0] = obj["date"];
+
+								//loop through points
+								for (var h = 1; h < headers.length; ++h){ 
+									var hdr = Number(headers[h]);
+									var pt  = Number(obj[hdr]);
+
+									spts[h-1] = new SeriesPoint(hdr, pt);
+									
+									row.push(pt.toFixed(2));
+								}
+
+								series.addPoints(spts);
+								serieses[s] = series;
+
+								that.dataset.push(row);
+							}
+
+							that.setup(serieses);
+						}
+					});
+		
+		}
+
+
+		//setup
+		this.setup = function(serieses) {
+
+			ambLight = new THREE.AmbientLight(0x666666);
+			light = new THREE.DirectionalLight(0xffffff);
+			light.position.set(1,1,1).normalize();
+			this.scene.add(light);
+
+			lineChart = new Chart('line_evolution', center, sz);
+			lineChart.yAxis.padding = 1.0;
+
+			for (var i = 0; i < serieses.length; ++i) {
+				
+				lineChart.addSeries(serieses[i]);
+			}
+
+			lineChart.render(this.scene);
+
+			/*
+			var dataSet = [
+				['1/1/2010','10.0','11.0','12.0','13.0']
+			];*/
+
+			var dataSet = this.dataset;
+
+			$('#example').dataTable( {
+				"paging": false,
+				"info":false,
+				"data": dataSet,
+				"columns": [
+				{ "title": "Date" },
+				{ "title": "30d" },
+				{ "title": "60d" },
+				{ "title": "91d" },
+				{ "title": "122d", "class": "left" },
+				{ "title": "152d", "class": "left" },
+				{ "title": "182d", "class": "left" },
+				{ "title": "273d", "class": "left" },
+				{ "title": "365d", "class": "left" }
+
+				]
+				} );   
+
+		}
+
+		//updates each frame
+		this.update = function() {
+
+		}
+
+		}//functionScene1
+
+<!--<script type="text/javascript" class="init">-->
+
+
+/*
+	console.log(scene1);
+
+
+$(document).ready(function() {
+//$('#demo').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
+
+$('#example').dataTable( {
+"paging": false,
+"info":false,
+"data": dataSet,
+"columns": [
+{ "title": "Date" },
+{ "title": "30d" },
+{ "title": "60d" },
+{ "title": "91d" },
+{ "title": "122d", "class": "left" }
+]
+} );   
+} );*/
+</script>
+
+
+<div class="jumbotron">
+<h4>Data</h4>
+</div>
+
+<table cellpadding="0" cellspacing="0" border="0" class="cell-border" width="100%" id="example"></table>
+
+</body>
+
+</div> <!-- /container -->
+
+</html>

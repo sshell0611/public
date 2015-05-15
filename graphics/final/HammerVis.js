@@ -224,6 +224,10 @@ ChartRendererFactory.prototype.createRenderer = function createRenderer( chartTy
 	else if (chartType == 'line') {
 		renderClass = new LineChartRenderer();	
 	}
+	else if (chartType == 'line_evolution_decay') {
+		renderClass = new LineEvolutionChartRenderer();	
+		renderClass.decay = true;
+	}
 	else if (chartType == 'line_evolution') {
 		renderClass = new LineEvolutionChartRenderer();	
 	}
@@ -304,6 +308,7 @@ LineChartRenderer.prototype = {
 var LineEvolutionChartRenderer = function() {
 	this.index = 0;
 	this.animOptions = null;
+	this.decay = false;
 	this.init();
 }
 
@@ -323,7 +328,10 @@ LineEvolutionChartRenderer.prototype = {
 		var animOptions = this.animOptions;
 		s = idx;
 		var len = seriesArr.length;
-		var fadeOutOpts = {duration:2000, idx:s-1, n:len, lambda:0.25, lowbound: 0.1, c:1};
+		var fadeOutOpts = {duration:2000, decay:false, lowbound:0.1};
+		if (this.decay == true) {
+			fadeOutOpts = {duration:2000, decay:true, idx:s-1, n:len, lambda:0.25, lowbound: 0.1, c:1};
+		}
 		var last = (len == s+1);
 
 		seriesArr[s-1].fadeOut(chartOptions, fadeOutOpts, function(){ 
@@ -986,6 +994,7 @@ AnimatedSeries.prototype.fadeOut = function(choptions, animoptions, callback) {
 		var t = n - idx;
 		var lam = 0.25;//animoptions.lambda;
 		var lb = animoptions.lowbound;
+		var decay = animoptions.decay;
 
 		var finalOpac = (c-lb) * Math.exp(-lam * t) + lb;
 		var to = 1;
@@ -1002,8 +1011,13 @@ AnimatedSeries.prototype.fadeOut = function(choptions, animoptions, callback) {
 				complete: callback,
 				step: function(delta) {
 					//delta is a % of time elapsed
-					//var opacity = Math.max(to - delta, lb);
-					var opacity = Math.max(to - delta*(1-finalOpac), lb);
+					var opacity = 1.0;
+					if (decay == true)  { 
+						opacity = Math.max(to - delta*(1-finalOpac), lb);
+					}
+					else {
+						opacity = Math.max(to - delta, lb);
+					}
 					if (first == true) {
 						this.series.draw(scene, xAxis, yAxis, xRange, yRange, opacity);
 						first = false;

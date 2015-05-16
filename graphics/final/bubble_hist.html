@@ -81,9 +81,11 @@
 <hr>
 
 <div class="jumbotron">
-<h4>Chart Description</h4>
-<p>Write about chart here</p>
+<h4>Bubble Chart with History</h4>
 </div>
+<p align="justify">
+This version of the Bubble chart shows how to integrate history into a static chart.  The dataset is fabricated.  The current layout shows the current state of the world.  Clicking on any one of the bubbles will bring it into focus.  The rest of the bubbles fade out to indicate we are drilling down into one particular point.  Then an additional data set is plotted showing how the bubble has moved over time from start until now.  This is done using splines to show the path and bubbles plotted on top showing discrete values over time.
+</p>
 
 <script>
 		window.time = 0;
@@ -184,6 +186,9 @@
 					new BubblePoint( 0.1 , 0.25,  0.5 )
 			];
 
+			//color
+			pts[0].color = Math.random * 0xffffff;
+
 			pts[2].setHistory(CreateHistory());
 
 			series.addPoints(pts);
@@ -269,11 +274,6 @@
 		}
 
 </script>
-
-
-<div class="jumbotron">
-<h4>Data</h4>
-</div>
 
 <table cellpadding="0" cellspacing="0" border="0" class="cell-border" width="100%" id="example"></table>
 

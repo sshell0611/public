@@ -81,16 +81,16 @@
 <hr>
 
 <div class="jumbotron">
-<h4>Bubble Chart</h4>
+<h4>Market Movements</h4>
 </div>
 <p align="justify">
 Bubble charts are typically used to display three dimensions of data: position on the x and y axis and the size of the bubble.  A fourth dimension can be communicated by using the color of the bubble.  Graphics present the opportunity to add additional dimensions into the chart.  
 </p>
 <p align="justify">
-In this example, I use the texture of the bubble as a replacement for color.  The two different textures communicate whether each point is hot or cold.  For this data set, this indicates whether the stock traded more or less than it's average daily volume.  I also used rotation of the spheres to communicate another dimension of speed.  The faster the sphere is rotating indicates a higher speed.  For this data set, this communicates the realized volatility of the the stock over the past 6 days - essentially how much the stock price has moved recently.  The x-axis is displaying how much the stock has moved today.  Taken together with the recent "speed", we can see whether the stock is continuing with the recent trend or breaking from it.
+This example presents a view of market movements in a few different stocks.  The x-axis displays the percentage move in the stock price and the y-axis is the move in 1 month implied volatility.  The weight of the bubble is the market capitalization of the company.  There are two additional dimensions integrated into this chart.  I use the texture of the bubble to communicate whether each point is hot or cold.  For this data set, this indicates whether the stock traded more or less than it's average daily volume.  I also used rotation of the spheres to communicate another dimension of speed.  The faster the sphere is rotating indicates a higher speed.  For this data set, this communicates the realized volatility of the the stock over the past 6 days - essentially how much the stock price has moved recently.  The x-axis is displaying how much the stock has moved today.  Taken together with the recent "speed", we can see whether the stock is continuing with the recent trend or breaking from it.
 </p>
 <p align="justify">
-I think that using graphics in bubble charts can be very effective at communicating additional dimesionality of data.  One can also imagine this same chart used intraday with real-time data.  The rotation speed could also show how much the stock has moved over the last X minutes intraday.  This is something that cold not be displayed with a static bubble chart.
+I think that using graphics in bubble charts can be very effective at communicating additional dimesionality of data.  One can also imagine this same chart used intraday with real-time data.  The rotation speed could also show how much the stock has moved over the last X minutes intraday.  This is something that cold not be displayed with a static bubble chart.  In this particular example, texture is essentially used as a replacement for color, however, the two of these could be used at the same time to further distinguish information on a point.  One could imagine the same color with two different textures used to provide clarity between two similar points.
 </p>
 
 <script>

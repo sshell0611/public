@@ -1159,8 +1159,8 @@ BubblePoint.prototype.init = function(x, y, w) {
 	var geom = new THREE.SphereGeometry(this.baserad, 32, 32);
 	var mat  = new THREE.MeshPhongMaterial({
 		ambient  : 0,
-		emissive : 0x0000ff/*Math.random() * 0xffffff*/,
-		color    : 0x0000ff/*Math.random() * 0xffffff*/,
+		emissive : Math.random() * 0x000000,//0x0000ff/*/,
+		color    : Math.random() * 0xffffff,///0x0000ff/,
 		specular : 0x101010,
 		shininess: 50 });
 	this.mesh = new THREE.Mesh(geom, mat);

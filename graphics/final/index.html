@@ -24,7 +24,7 @@
 
 		/* Main marketing message and sign up button */
 		.jumbotron {
-		margin: 60px 0;
+		margin: 0px 10px;
 		text-align: center;
 		}
 		.jumbotron h1 {
@@ -65,32 +65,22 @@
 
 <div class="jumbotron">
 <h4>Project Scope</h4>
+</div>
 
-<p>
-I would like to incorporate some of the graphics and animation concepts we have used throughout the semester into my own data visualization package.  The project will explore the overlap of data analytics and computer graphics.
-
-The animation used in the charts will not be gratuitous, but rather, will enhance the viewer's understanding of the data.  Graphics techniques will be used as a way to coherently fit more "dimensions" of the data into the small space available on a webpage.
-
-Specifically, here are a couple ideas for charts:
-1) Bubble charts usually show 3 dimensions of data using the x and y axis and size/weight of the bubble.  I will incorporate additional dimensions of the data using textures and animation.
-2) 3D surface modeling using splines.  Incorporate a time-lapse component using animation to show changes in the surface.
-
-The concepts from class I will use are:
-- Parametric shapes
-- Procedural texture
-- Lighting/Colors/Shading
-- Movement and Rotation
-- Splines
-- Javascript - three.js
+<p align="justify">
+The idea for the project was to explore the overlap of data analytics and computer graphics.  Many current charting packages provide ways to visualize snapshots of data at a point in time in two and three dimensions.  Most datasets, however, are not static; they constantly change and evolve over time.  The project is my first attempt to integrate animation and graphics techniques into a charting package to reveal additional information about a data set.
+</p>
+<p align="justify">
+HammerVis is a JavaScript charting package built on top of three.js that incorporates some of the graphics and animation concepts we have used throughout the semester. The idea is to not just use gratuitous animations in the charts, but rather, use animations to enhance the viewer's understanding of the data.  Other graphics techniques were explored as a way to coherently fit more dimensions of the data sets into the small space available on a webpage.
 </p>
 
 <div class="jumbotron">
 <h4>Results</h4>
-
-<p>Write about results here...............</p>
-
-
 </div>
+
+<p align="justify">
+I developed two different chart flavors: a bubble chart and a line chart, each incorporating different animation techniques.  There are a large number of building blocks that go into building a charting package: positioning and rendering axes, tickmarks, labeling, scaling points in a data set to proper screen coordinates, among others.  These all have to be accounted for before attempting to use animation.  The amount of time this required prevented me from exploring more in the 3d space.  The main graphics techniques I incorporated were texture and rotation to add additional dimensionality to bubble charts.  Splines and movement were used as well to show a historical path of a point on the chart.  For line charts, the main focus was rendering a time lapse animation to show the evolution of a data set over time.  Colors and shading were important to preserve the clarity of the data.  From my research, I believe that graphics techniques can add additional value to data visualization tools.  I am just scratching the surface of how subtle techniques can be useful in this space.  However, there is a fine line where certain techniques could actually reduce the viewer's understanding of the data by cluttering the chart resulting in information overload. The proper balance must be kept to remain effectively communicate.  These are areas to explore in the future.
+</p>
 
 
 <hr>
@@ -99,24 +89,24 @@ The concepts from class I will use are:
 <div class="span6">
 
 <a class="btn btn-large btn-success" href="bubble_dim.html">Chart 1</a>
-<h5>Bubbles with additional dimensionality</h5>
+<h5>High-Dimension Bubble Chart</h5>
 
 <p>&nbsp;<p>
 
 <a class="btn btn-large btn-success" href="time_lapse_decay.html">Chart 3</a>
-<h5>Line Time Lapse Decay</h5>
+<h5>Line Chart Evolution (v1)</h5>
 
 </div>
 
 <div class="span6">
 
 <a class="btn btn-large btn-success" href="bubble_hist.html">Chart 2</a>
-<h5>Bubbles with history</h5>
+<h5>Bubble Chart with History</h5>
 
 <p>&nbsp;<p>
 
 <a class="btn btn-large btn-success" href="line_fade.html">Chart 4</a>
-<h5>Line Time Lapse Fade</h5>
+<h5>Line Chart Evolution (v2)</h5>
 
 
 </div>

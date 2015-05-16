@@ -81,11 +81,20 @@
 <hr>
 
 <div class="jumbotron">
-<h4>Chart Description</h4>
-<p>Write about chart here</p>
+<h4>Time-Lapse Animation of S&P 500 Implied Volatilty (v2)</h4>
 </div>
+<p align="justify">
+The following line chart also displays the term structure of S&P 500 Implied Volatility.  Quarterly data is used from 2012 until March of 2015.  
+</p>
+<p align="justify">
+This version of the time-lapse does not use a decay function.  Each curve fades equally into the background.  However, different colors are chosen to display each curve.  The most recent curve is shown in red and is not faded.  With a proper Legend and labeling, this technique could actually prove to be more effective than v1.  
+</p>
 
 <script>
+		var raycaster = new THREE.Raycaster();
+		var mouse = new THREE.Vector2();
+		var INTERSECTED;
+
 		window.time = 0;
 		window.count = 0;
 		window.SimpleScene = function() {
@@ -93,21 +102,29 @@
 				this.scene = new THREE.Scene();
 				this.serieses = [];
 				this.dataset = [];
+				this.canvas1 = null;
+				this.context1 = null;
+			    this.texture1 = null;
+			    this.sprite1 = null; 
+				this.isSetup = false;
 
 				// CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
 
-				var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
-				camera.position.z = 5;
-				this.scene.add(camera);
+				this.camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+				this.camera.position.z = 5;
+				this.scene.add(this.camera);
+
+				this.projector = new THREE.Projector();
 
 				// CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
 				//var renderer = new THREE.WebGLRenderer( { alpha: true } );
-				var renderer = new THREE.CanvasRenderer( { alpha: true } );
-				renderer.setSize(600, 600);
-				renderer.shadowMapEnabled = true;
+				this.renderer = new THREE.CanvasRenderer( { alpha: true } );
+				this.renderer.setSize(600, 600);
+				this.renderer.shadowMapEnabled = true;
 				//renderer.gammaInput = true;
 				//renderer.gammaOutput = true;
-				document.getElementById(name).appendChild(renderer.domElement);
+				document.getElementById(name).appendChild(this.renderer.domElement);
+				document.addEventListener('mousemove', onMouseMove, false);
 
 				// CALL THE USER'S SETUP FUNCTION JUST ONCE.
 
@@ -119,8 +136,10 @@
 				var that = this;
 				(function tick() {
 					time = (new Date().getTime()) / 1000;
-					that.update();
-					renderer.render(that.scene, camera);
+					if (that.isSetup == true) {
+						that.update();
+					}
+					that.renderer.render(that.scene, that.camera);
 					//renderer.setClearColor(that.scene.fog.color);
 					requestAnimationFrame(tick);
 				})();
@@ -143,6 +162,22 @@
 		Scene1.prototype = new SimpleScene;
 		var scene1 = new Scene1();
 		scene1.init('Scene1_id');
+
+
+		function onMouseMove(event) {
+
+			var w = scene1.renderer.domElement.width;
+			var h = scene1.renderer.domElement.height;
+
+			scene1.sprite1.position.set(event.offsetX, event.offsetY,0 );
+
+			mouse.x = (event.offsetX / w) * 2 - 1;
+			mouse.y = - (event.offsetY / h) * 2 + 1;
+
+			//console.log(mouse.x + "," + mouse.y);
+			//console.log(sprite1);
+
+		}
 
 		function Scene1() {
 
@@ -169,13 +204,15 @@
 
 								var row = [];
 
-								var series = new AnimatedSeries("Test"+s, "line");
-								series.color = "#0f0f0f";
-
 								var obj = data[s];
-								var spts = [];
+								var dt  = obj["date"];
 								
-								row[0] = obj["date"];
+								row[0] = dt;
+
+								var spts = [];
+								var series = new AnimatedSeries(dt, "line");
+								series.color = Math.random() * 0xffffff ;//"#0f0f0f";
+							
 
 								//loop through points
 								for (var h = 1; h < headers.length; ++h){ 
@@ -202,6 +239,20 @@
 
 		//setup
 		this.setup = function(serieses) {
+
+			this.canvas1 = document.createElement('canvas');
+			this.context1 = this.canvas1.getContext('2d');
+			this.context1.font = "Bold 20px Arial";
+			this.context1.fillStyle = "rgba(0,0,0,0.95)";
+			this.context1.fillText("Hello, world!", 0, 20);
+			this.texture1 = new THREE.Texture(this.canvas1);
+			this.texture1.needsUpdate = true;
+			var spriteMaterial = new THREE.SpriteMaterial({map:this.texture1, useScreenCoordinates:true });
+			this.sprite1 = new THREE.Sprite(spriteMaterial);
+			this.sprite1.scale.set(200,100,1.0);
+			this.sprite1.position.set(0,0,0);
+			
+			this.scene.add(this.sprite1);
 
 			ambLight = new THREE.AmbientLight(0x666666);
 			light = new THREE.DirectionalLight(0xffffff);
@@ -238,10 +289,78 @@
 				]
 				} );   
 
+			this.isSetup = true;
+
 		}
 
 		//updates each frame
 		this.update = function() {
+
+				return;
+
+				// create a Ray with origin at the mouse position
+				//   and direction into the scene (camera direction)
+				var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
+				this.projector.unprojectVector( vector, this.camera );
+				var ray = new THREE.Raycaster( this.camera.position, vector.sub( this.camera.position ).normalize() );
+
+				// create an array containing all objects in the scene with which the ray intersects
+				var intersects = ray.intersectObjects( this.scene.children );
+
+				// INTERSECTED = the object in the scene currently closest to the camera 
+				//		and intersected by the Ray projected from the mouse position 	
+
+				// if there is one (or more) intersections
+				if ( intersects.length > 0 )
+				{
+				// if the closest object intersected is not the currently stored intersection object
+				if ( intersects[ 0 ].object != INTERSECTED ) 
+				{
+				// restore previous intersection object (if it exists) to its original color
+				if ( INTERSECTED ) 
+				INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
+				// store reference to closest object as current intersection object
+				INTERSECTED = intersects[ 0 ].object;
+				// store color of closest object (for later restoration)
+				INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+				// set a new color for closest object
+				INTERSECTED.material.color.setHex( 0xffff00 );
+
+				// update text, if it has a "name" field.
+				if ( intersects[ 0 ].object.name )
+				{
+					this.context1.clearRect(0,0,640,480);
+					var message = intersects[ 0 ].object.name;
+					var metrics = this.context1.measureText(message);
+					var width = metrics.width;
+					this.context1.fillStyle = "rgba(0,0,0,0.95)"; // black border
+					this.context1.fillRect( 0,0, width+8,20+8);
+					this.context1.fillStyle = "rgba(255,255,255,0.95)"; // white filler
+					this.context1.fillRect( 2,2, width+4,20+4 );
+					this.context1.fillStyle = "rgba(0,0,0,1)"; // text color
+					this.context1.fillText( message, 4,20 );
+					this.texture1.needsUpdate = true;
+				}
+				else
+				{
+					this.context1.clearRect(0,0,300,300);
+					this.texture1.needsUpdate = true;
+				}
+				}
+				} 
+				else // there are no intersections
+				{
+					// restore previous intersection object (if it exists) to its original color
+					if ( INTERSECTED ) 
+					INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
+					// remove previous intersection object reference
+					//     by setting current intersection object to "nothing"
+					INTERSECTED = null;
+					this.context1.clearRect(0,0,300,300);
+					this.texture1.needsUpdate = true;
+				}
+
+
 
 		}
 

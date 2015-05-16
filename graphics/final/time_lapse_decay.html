@@ -43,7 +43,7 @@
 
 		/* Main marketing message and sign up button */
 		.jumbotron {
-		margin: 30px 0;
+		margin: 0px 0;
 		text-align: center;
 		}
 		.jumbotron h1 {
@@ -81,9 +81,17 @@
 <hr>
 
 <div class="jumbotron">
-<h4>Chart Description</h4>
-<p>Write about chart here</p>
+<h4>Time-Lapse Animation of S&P 500 Implied Volatilty</h4>
 </div>
+<p align="justify">
+The following line chart displays the term structure of S&P 500 Implied Volatility.  This shows the market's expectation for volatility in the S&P500 over a range of time in the future.  The x-axis is the number of days and the y-axis is Implied Volatility.  Quarterly data is used from 2012 until March of 2015.  
+</p>
+<p align="justify">
+I used animation as a way to show the data evolving over time.  This way the viewer can see not just one snapshot but how the term structure has moved throughout time.  There is an exponential decay function built in to fade each curve depending on how recent the data is. I think this has the potential to be an effective technique, however, in this case more recent curves are not very distinguishable from each other.  The number of curves displayed could be limited to preserve clarity.  Including labels with the date of each curve would also help to clarify the data.  The decay function could be tweaked to better visually represent the changes in time.
+</p>
+<p align="justify">
+Another technique which could be effective here would be to use a 3d surface.  The third dimension of time could be communicated on the other axis.  This is an area to explore in the future.
+</p>
 
 <script>
 		window.time = 0;

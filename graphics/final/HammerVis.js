@@ -799,6 +799,7 @@ Series.prototype = {
 				var material = new THREE.LineBasicMaterial( { color: this.color, linewidth:2.0, linecap:'bevel', linejoin:'bevel' });
 				var geometry = new THREE.Geometry();
 				var line = new THREE.Line(geometry, material);
+				line.name = this.name;
 
 				for (p = 0; p < this.numPoints(); p++) {
 					var pt = this.getPoint(p);

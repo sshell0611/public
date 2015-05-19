@@ -643,6 +643,7 @@ Axis.prototype = {
 					end   = new THREE.Vector3(screenRng.lower, this.axisRange.upper, 0);
 				}
 				else {
+					var y = Math.max(Math.abs(this.axisRange.lower), Math.abs(this.axisRange.upper));
 					start = new THREE.Vector3(0, this.axisRange.lower, 0);
 					end   = new THREE.Vector3(0, this.axisRange.upper, 0);
 				}
@@ -654,8 +655,9 @@ Axis.prototype = {
 					end   = new THREE.Vector3(this.axisRange.upper, screenRng.lower, 0);
 				}
 				else {
-					start = new THREE.Vector3(this.axisRange.lower, 0, 0);
-					end   = new THREE.Vector3(this.axisRange.upper, 0, 0);
+					var x = Math.max(Math.abs(this.axisRange.lower), Math.abs(this.axisRange.upper));
+					start = new THREE.Vector3(-x/*this.axisRange.lower*/, 0, 0);
+					end   = new THREE.Vector3(x/*this.axisRange.upper*/, 0, 0);
 				}
 			}
 			this.start = start;
@@ -670,6 +672,7 @@ Axis.prototype = {
 			var width = this.tickmarks.major.thickness;
 			var material = new THREE.LineBasicMaterial( { color: 0x7e7e7e, linewidth:width});
 
+			console.log(this.dataRange);
 			var tickValues = this.tickmarks.compute(this.dataRange);
 			//console.log(tickValues);
 			for (i = 0; i < tickValues.length; ++i)	{
@@ -711,7 +714,6 @@ Axis.prototype = {
 				}
 			}
 			this.dataRange.addPadding(this.padding);
-			//this.axisRange = rng;
 		},
 
 		scalePoint: function(pt) {
@@ -1361,7 +1363,8 @@ BubblePoint.prototype.applyDimension = function(dnum, name, factor) {
 		var norm = (dim - factor.lower) / factor.getRange();
 
 		var speedlower = 0.005;
-		var speedRange = 0.095;
+		var speedRange = 0.105;
+		//var speedRange = 0.095;
 		//max speed = 0.1;
 		//min speed = 0.005;
 	

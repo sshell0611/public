@@ -87,7 +87,7 @@
 Bubble charts are typically used to display three dimensions of data: position on the x and y axis and the size of the bubble.  A fourth dimension can be communicated by using the color of the bubble.  Graphics present the opportunity to add additional dimensions into the chart.  
 </p>
 <p align="justify">
-This example presents a view of market movements in a few different stocks.  The x-axis displays the percentage move in the stock price and the y-axis is the move in 1 month implied volatility.  The weight of the bubble is the market capitalization of the company.  There are two additional dimensions integrated into this chart.  I use the texture of the bubble to communicate whether each point is hot or cold.  For this data set, this indicates whether the stock traded more or less than it's average daily volume.  I also used rotation of the spheres to communicate another dimension of speed.  The faster the sphere is rotating indicates a higher speed.  For this data set, this communicates the realized volatility of the the stock over the past 6 days - essentially how much the stock price has moved recently.  The x-axis is displaying how much the stock has moved today.  Taken together with the recent "speed", we can see whether the stock is continuing with the recent trend or breaking from it.
+This example presents a view of market movements in a few different stocks.  The x-axis displays the percentage move in the stock price and the y-axis is the move in 1 month implied volatility.  The weight of the bubble is the market capitalization of the company.  There are two additional dimensions integrated into this chart.  I use the texture of the bubble to communicate whether each point is hot or cold.  For this data set, this indicates whether the stock traded more or less than it's average daily volume.  I also used rotation of the spheres to communicate another dimension of speed.  The faster the sphere is rotating indicates a higher speed.  For this data set, this communicates the realized volatility of the the stock over the past 6 days - essentially how much the stock price has moved recently.  The x-axis is displaying how much the stock has moved today.  Taken together with the recent "speed", we can see whether the stock is continuing with the recent trend or breaking from it.  Clicking on a bubble will highlight the bubble and dim the others into the background.  In the future, this could be used to drill into more info about this particular data point.
 </p>
 <p align="justify">
 I think that using graphics in bubble charts can be very effective at communicating additional dimesionality of data.  One can also imagine this same chart used intraday with real-time data.  The rotation speed could also show how much the stock has moved over the last X minutes intraday.  This is something that cold not be displayed with a static bubble chart.  In this particular example, texture is essentially used as a replacement for color, however, the two of these could be used at the same time to further distinguish information on a point.  One could imagine the same color with two different textures used to provide clarity between two similar points.
@@ -166,43 +166,43 @@ I think that using graphics in bubble charts can be very effective at communicat
 		var raycaster = new THREE.Raycaster();
 		var mouse = new THREE.Vector2();
 
-
-		function CreateHistory() {
-
-			var pts = [
-					new BubblePoint( 0.0 , 0.0 ,  0.3 ),
-					new BubblePoint(-0.4 ,-0.2 ,  0.5 ),
-					new BubblePoint(-0.7 ,-0.3 ,  1.2 ),
-					new BubblePoint(-0.5 ,-1.1 ,  1.0 ),
-					new BubblePoint(-0.8 ,-1.5 ,  1.75),
-					new BubblePoint(-1.0 ,-2.0 ,  2.0 )
-			];
-
-			return pts;
-		}
-
 		function CreateBubbleSeries() {
 
 			var series = new Series("Test", "bubble");
 
+
+			//spot, vol, mktcap
+
+			//aapl
+			//amzn
+			//csco
+			//fb
+			//gmcr
+			//hlf
+			//jnj
+			//twtr
+
 			var pts = [
-					new BubblePoint( 1.0 , 2.0 ,  1.0 ),
-					new BubblePoint( 0.0 ,-1.0 ,  1.5 ),
-					new BubblePoint(-1.0 ,-2.0 ,  2.0 ),
-					new BubblePoint(-0.5 , 2.0 ,  0.5 ),
-					new BubblePoint(-0.25, 0.5 ,  0.25),
-					new BubblePoint( 0.1 , 0.25,  0.5 )
+					new BubblePoint( 1.15 ,  -0.62 ,  750 ),
+					new BubblePoint(-0.13,   -0.16 ,  198 ),
+					new BubblePoint( 0.73 ,  -1.07 ,  151 ),
+					new BubblePoint( 0.58 ,  -0.29 ,  227 ),
+					new BubblePoint(-1.11,   -0.45 ,  13.9),
+					new BubblePoint( 0.82 ,  -0.92,   4.4 ),
+					new BubblePoint(-1.15 ,  -0.13,   286.78 ),
+					new BubblePoint( 0.38 ,   1.07,   24.42 )
 			];
 
-			pts[0].setDimensions([2.0, 30.0]);
-			pts[1].setDimensions([1.5, 25.0]);
-			pts[2].setDimensions([5.0, 10.0]);
-			pts[3].setDimensions([1.0, 15.0]);
-			pts[4].setDimensions([2.0, 10.0]);
-			pts[5].setDimensions([3.0, 12.0]);
+			pts[0].setDimensions([104, 18.14]);
+			pts[1].setDimensions([65,  15.68]);
+			pts[2].setDimensions([93,  13.95]);
+			pts[3].setDimensions([84,  29.54]);
+			pts[4].setDimensions([316, 65.42]);
+			pts[5].setDimensions([74,  24.34]);
+ 			pts[6].setDimensions([138, 10.80]);
+			pts[7].setDimensions([46,  11.52]);
 
-			//pts[2].setHistory(CreateHistory());
-
+ 
 			series.addPoints(pts);
 			return series;
 		}
@@ -327,13 +327,69 @@ I think that using graphics in bubble charts can be very effective at communicat
 <tbody>
 <tr>
 <td>AAPL</td>
-<td>2.0</td>
-<td>1.0</td>
-<td>100</td>
-<td>100</td>
-<td>15</td>
-
+<td>1.15</td>
+<td>-0.62</td>
+<td>750b</td>
+<td>104%</td>
+<td>18.14</td>
 </tr>
+<tr>
+<td>AMZN</td>
+<td>-0.13</td>
+<td>-0.16</td>
+<td>198b</td>
+<td>65%</td>
+<td>15.68</td>
+</tr>
+<tr>
+<td>CSCO</td>
+<td>0.73</td>
+<td>-1.07</td>
+<td>151b</td>
+<td>93%</td>
+<td>13.95</td>
+</tr>
+<tr>
+<td>FB</td>
+<td>0.58</td>
+<td>-0.29</td>
+<td>227b</td>
+<td>84%</td>
+<td>29.54</td>
+</tr>
+<tr>
+<td>GMCR</td>
+<td>-1.11</td>
+<td>-0.45</td>
+<td>13.9b</td>
+<td>316%</td>
+<td>65.42</td>
+</tr>
+<tr>
+<td>HLF</td>
+<td>0.82</td>
+<td>-0.92</td>
+<td>4.4b</td>
+<td>74%</td>
+<td>24.34</td>
+</tr>
+<tr>
+<td>JNJ</td>
+<td>-1.15</td>
+<td>-0.13</td>
+<td>287b</td>
+<td>138%</td>
+<td>10.80</td>
+</tr>
+<tr>
+<td>TWTR</td>
+<td>0.38</td>
+<td>1.07</td>
+<td>24b</td>
+<td>46%</td>
+<td>11.52</td>
+</tr>
+
 </tbody>
 </table>
 
